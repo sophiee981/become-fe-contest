@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+.localized
+*.localized/
+
+# Node
+node_modules/
+dist/
+.env
+.env.local
+
+# Editor
+.vscode/
+.idea/
+*.swp
