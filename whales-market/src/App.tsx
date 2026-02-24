@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { BrowserRouter } from 'react-router-dom'
 import { Navbar }        from '@/components/layout/Navbar'
-import { Footer }        from '@/components/layout/Footer'
 import { ToastProvider } from '@/components/ui/Toast'
 import { AppRouter }     from '@/router'
 
@@ -20,7 +19,6 @@ export const App: React.FC = () => {
           <main className="flex-1">
             <AppRouter />
           </main>
-          <Footer />
         </div>
       </ToastProvider>
     </BrowserRouter>

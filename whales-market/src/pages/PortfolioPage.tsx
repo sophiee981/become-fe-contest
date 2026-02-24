@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { TrendingUp, TrendingDown, BarChart2, Clock } from 'lucide-react'
 import { clsx } from 'clsx'
 import { PageWrapper } from '@/components/layout/PageWrapper'
@@ -19,6 +19,7 @@ const formatPrice = (p: number) =>
 
 export const PortfolioPage: React.FC = () => {
   const { showToast } = useToast()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('orders')
   const [orders, setOrders] = useState<MyOrder[]>(mockMyOrders)
 
@@ -107,7 +108,7 @@ export const PortfolioPage: React.FC = () => {
                 icon={<Clock size={40} />}
                 title="No open orders"
                 description="Go to a market to place your first order"
-                action={{ label: 'Browse Markets', onClick: () => {} }}
+                action={{ label: 'Browse Markets', onClick: () => navigate('/market') }}
               />
             ) : (
               <OpenOrdersTable orders={openOrders} onCancel={handleCancel} />

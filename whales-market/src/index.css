@@ -11,7 +11,7 @@
     margin: 0;
     background-color: #0A0A0B;
     color: #F9F9FA;
-    font-family: 'Inter Variable', 'Inter', sans-serif;
+    font-family: 'Inter Variable', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -21,6 +21,12 @@
     all: unset;
     cursor: pointer;
     display: inline-flex;
+    /* all: unset resets border-style → none and border-width → medium.
+       Restore both so Tailwind's `border` utility works correctly:
+       - border-style: solid (required for border to render)
+       - border-width: 0    (start invisible, explicit `border` class adds 1px) */
+    border-style: solid;
+    border-width: 0;
   }
 
   /* Scrollbar */
