@@ -124,6 +124,13 @@ const config: Config = {
         'border-active':  '#5BD197',  // border-primary dark    → primary-400
         'border-danger':  '#FD5E67',  // border-danger dark     → danger-400
 
+        // ── Chain / Network badge colors ──────────────────────────────────────
+        // Figma: node 42532:726327 — chain badge background fallback (no logo)
+        'chain-eth':  '#627EEA',   // Ethereum
+        'chain-sol':  '#9945FF',   // Solana
+        'chain-base': '#0052FF',   // Base
+        'chain-bnb':  '#F0B90B',   // BNB Chain
+
         // ── Overlay / Social ─────────────────────────────────────────────────
         // Figma: color/overlay/social-*
         'social-discord':  '#5865F2',

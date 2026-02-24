@@ -61,6 +61,7 @@ export const mockHomeMarkets: HomeMarket[] = [
     settleTime: '2025-06-10T00:00:00Z',
     settleDisplay: '10/06/2025',
     status: 'upcoming',
+    settleCountdown: '18h:36m:24s',
   },
   {
     id: 'era',
