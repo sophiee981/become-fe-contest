@@ -1,7 +1,14 @@
 # CONTEXT.md — Whales Market Session Handoff
 
 > File for AI session continuity. Read this **before** touching any code.
-> Last updated: **2026-02-26** (session 3: WalletModal rewrite, tab badges, Recent Trades icons, MyDashboard page)
+> Last updated: **2026-02-26** (session 4: realtime simulation, TS build fix, Vercel deploy)
+
+## 0. Live Deployment
+
+| | |
+|---|---|
+| **Vercel URL** | **https://become-fe-contest.vercel.app/** |
+| Auto-deploy | Every push to `main` triggers redeploy |
 
 ---
 
@@ -20,6 +27,7 @@ This is a **frontend-only** project (no backend) — all data comes from typed m
 | Icons | lucide-react + hand-crafted SVG icons from Figma |
 | Font | Inter Variable (via `@fontsource-variable/inter`) |
 | Dev command | `npm run dev` → binds to `http://127.0.0.1:5173` |
+| **Vercel** | **https://become-fe-contest.vercel.app/** |
 
 ---
 
@@ -54,6 +62,9 @@ e5e9da9  Remove back button from WalletModal header, keep only close button
 0fce26d  Market Detail V2 — market header pixel-perfect per Figma
 2cc31c2  Add MyDashboard page and mock data
 be1feec  Fix: bind Vite dev server to 127.0.0.1 to resolve connection refused
+e1ec743  Landing: realtime chart + live trade stream simulation
+79d5e9b  Fix TypeScript build errors for Vercel deploy
+236525b  Add vercel.json for SPA routing (★ LIVE on Vercel)
 ```
 
 ---
@@ -379,7 +390,7 @@ export const MODAL_SHADOW = '0 0 32px rgba(0,0,0,0.2)'
 
 4. **Preview tool viewport** — defaults narrow. Resize to 1440x900 for desktop verification.
 
-5. **`@fontsource-variable/inter`** — TypeScript reports "cannot find module" but package IS installed. Ignore the TS error in dev; `tsc -b` build will fail but `vite dev` works.
+5. **`@fontsource-variable/inter`** — Fixed via `src/vite-env.d.ts` declaring the module. Build now passes `tsc -b` cleanly.
 
 6. **Network type union** — any new network must be added to `HomeMarket['network']` union AND to `CHAIN_BG_CLASS` in LandingPage.tsx.
 
