@@ -7,6 +7,7 @@ import { PointsPage }          from '@/pages/PointsPage'
 import { CreateListingPage }   from '@/pages/CreateListingPage'
 import { ProfilePage }         from '@/pages/ProfilePage'
 import { NotFoundPage }        from '@/pages/NotFoundPage'
+import { MarketDetailV2Page }  from '@/pages/MarketDetailV2Page'
 
 export const AppRouter: React.FC = () => {
   return (
@@ -14,6 +15,7 @@ export const AppRouter: React.FC = () => {
       <Route path="/"           element={<LandingPage />} />
       <Route path="/market"     element={<MarketListPage />} />
       <Route path="/market/:id" element={<MarketDetailPage />} />
+      <Route path="/market-v2/:id" element={<MarketDetailV2Page />} />
       <Route path="/portfolio"  element={<PortfolioPage />} />
       <Route path="/points"     element={<PointsPage />} />
       <Route path="/create"     element={<CreateListingPage />} />
