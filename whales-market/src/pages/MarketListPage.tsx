@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, TrendingUp } from 'lucide-react'
+import { Search, TrendingUp } from 'lucide-react'
 import { clsx } from 'clsx'
 import { PageWrapper } from '@/components/layout/PageWrapper'
 import { Input } from '@/components/ui/Input'
@@ -37,10 +37,16 @@ const formatUSD = (n: number) => {
 
 const SortIcon: React.FC<{ col: ColumnKey; active: SortField; dir: SortDirection }> = ({ col, active, dir }) => {
   if (col === 'rank') return null
-  if (active !== col) return <ArrowUpDown size={14} className="text-text-muted opacity-40" />
-  return dir === 'asc'
-    ? <ArrowUp size={14} className="text-accent" />
-    : <ArrowDown size={14} className="text-accent" />
+  const field = col as SortField
+  const isActive = active === field
+  const upColor   = isActive && dir === 'asc'  ? '#F9F9FA' : '#7A7A83'
+  const downColor = isActive && dir === 'desc' ? '#F9F9FA' : '#7A7A83'
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path fillRule="evenodd" clipRule="evenodd" d="M7.44604 3.24253C7.59297 3.08724 7.79223 3 8 3C8.20777 3 8.40703 3.08724 8.55396 3.24253L10.7706 5.58598C10.8802 5.70188 10.9548 5.84954 10.985 6.01028C11.0152 6.17102 10.9996 6.33762 10.9402 6.48899C10.8808 6.64037 10.7803 6.76972 10.6514 6.86068C10.5224 6.95165 10.3709 7.00013 10.2158 7H5.78415C5.62914 7.00013 5.47758 6.95165 5.34864 6.86068C5.2197 6.76972 5.11917 6.64037 5.05978 6.48899C5.0004 6.33762 4.98481 6.17102 5.01501 6.01028C5.0452 5.84954 5.11982 5.70188 5.22941 5.58598L7.44604 3.24253Z" fill={upColor} />
+      <path fillRule="evenodd" clipRule="evenodd" d="M8.55396 12.7575C8.40703 12.9128 8.20777 13 8 13C7.79223 13 7.59297 12.9128 7.44604 12.7575L5.22941 10.414C5.11982 10.2981 5.0452 10.1505 5.01501 9.98972C4.98481 9.82898 5.0004 9.66238 5.05978 9.511C5.11917 9.35963 5.2197 9.23028 5.34864 9.13932C5.47758 9.04835 5.62914 8.99987 5.78415 9H10.2158C10.3709 8.99987 10.5224 9.04835 10.6514 9.13932C10.7803 9.23028 10.8808 9.35963 10.9402 9.511C10.9996 9.66238 11.0152 9.82898 10.985 9.98972C10.9548 10.1505 10.8802 10.2981 10.7706 10.414L8.55396 12.7575Z" fill={downColor} />
+    </svg>
+  )
 }
 
 const MarketRow: React.FC<{ market: Market; index: number }> = ({ market, index }) => {

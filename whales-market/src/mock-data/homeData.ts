@@ -5,7 +5,7 @@ export interface HomeMarket {
   token: string
   tokenName: string
   logo: string
-  network: 'ethereum' | 'solana' | 'base' | 'bnb'
+  network: 'ethereum' | 'solana' | 'base' | 'bnb' | 'sui'
   isNew?: boolean
   price: number
   priceChange24h: number
@@ -181,70 +181,121 @@ export interface UpcomingListing {
   token: string
   tokenName: string
   logo: string
-  network: string
+  network: 'ethereum' | 'solana' | 'base' | 'bnb' | 'sui'
+  isNew?: boolean
   status: 'soon' | 'countdown'
   listingTime: string | null
   countdown?: { days: string; hours: string; minutes: string }
+  watchers: number
+  investorAvatars: string[]   // avatar placeholder URLs / initials
+  investorOverflow: number    // "+24" badge count, 0 if none
+  narratives: string[]        // e.g. ['gamefi', 'NFT']
+  narrativeOverflow: number   // "+N" overflow count
+  moniScore: number           // numeric score, e.g. 10844
+  moniPct: number             // 0-100 bar fill percentage
 }
 
 export const mockUpcomingListings: UpcomingListing[] = [
   {
-    id: 'sea',
-    token: 'SEA',
-    tokenName: 'OpenSea',
-    logo: '🌊',
-    network: 'Ethereum',
+    id: 'skate-upcoming',
+    token: 'SKATE',
+    tokenName: 'SKATEON',
+    logo: '🛹',
+    network: 'solana',
     status: 'countdown',
     listingTime: null,
     countdown: { days: '07', hours: '12', minutes: '34' },
+    watchers: 4572,
+    investorAvatars: ['A', 'B', 'C', 'D', 'E'],
+    investorOverflow: 24,
+    narratives: ['gamefi', 'NFT'],
+    narrativeOverflow: 24,
+    moniScore: 10844,
+    moniPct: 45,
   },
   {
-    id: 'initia',
-    token: 'INIT',
-    tokenName: 'Initia',
-    logo: '🔷',
-    network: 'Ethereum',
+    id: 'skate-chain',
+    token: 'SKATE',
+    tokenName: 'Skate Chain',
+    logo: '🛹',
+    network: 'solana',
     status: 'countdown',
     listingTime: null,
     countdown: { days: '03', hours: '08', minutes: '15' },
+    watchers: 4572,
+    investorAvatars: [],
+    investorOverflow: 0,
+    narratives: ['gamefi', 'NFT'],
+    narrativeOverflow: 0,
+    moniScore: 24396,
+    moniPct: 78,
   },
   {
-    id: 'plume',
-    token: 'PLUME',
-    tokenName: 'Plume Network',
-    logo: '🪶',
-    network: 'Ethereum',
-    status: 'soon',
-    listingTime: null,
-  },
-  {
-    id: 'monad',
-    token: 'MON',
-    tokenName: 'Monad',
-    logo: '🟣',
-    network: 'Ethereum',
+    id: 'era-upcoming',
+    token: 'ERA',
+    tokenName: 'Caldera',
+    logo: '🌋',
+    network: 'ethereum',
     status: 'countdown',
     listingTime: null,
     countdown: { days: '14', hours: '22', minutes: '08' },
+    watchers: 4572,
+    investorAvatars: ['A', 'B', 'C', 'D'],
+    investorOverflow: 0,
+    narratives: [],
+    narrativeOverflow: 0,
+    moniScore: 11732,
+    moniPct: 48,
   },
   {
-    id: 'berachain',
-    token: 'BERA',
-    tokenName: 'Berachain',
-    logo: '🐻',
-    network: 'Ethereum',
+    id: 'grass-upcoming',
+    token: 'GRASS',
+    tokenName: 'Grass',
+    logo: '🌿',
+    network: 'solana',
     status: 'soon',
     listingTime: null,
+    watchers: 4572,
+    investorAvatars: ['A', 'B', 'C', 'D', 'E'],
+    investorOverflow: 16,
+    narratives: ['gamefi'],
+    narrativeOverflow: 0,
+    moniScore: 18283,
+    moniPct: 62,
   },
   {
-    id: 'megaeth',
-    token: 'MEGA',
-    tokenName: 'MegaETH',
+    id: 'loud-upcoming',
+    token: 'LOUD',
+    tokenName: 'Loud',
+    logo: '📢',
+    network: 'solana',
+    status: 'soon',
+    listingTime: null,
+    watchers: 4572,
+    investorAvatars: ['A', 'B', 'C', 'D', 'E'],
+    investorOverflow: 27,
+    narratives: ['gamefi', 'NFT'],
+    narrativeOverflow: 0,
+    moniScore: 32195,
+    moniPct: 92,
+  },
+  {
+    id: 'mmt-upcoming',
+    token: 'MMT',
+    tokenName: 'Momentum',
     logo: '⚡',
-    network: 'Ethereum',
+    network: 'sui',
+    isNew: true,
     status: 'countdown',
     listingTime: null,
     countdown: { days: '21', hours: '05', minutes: '42' },
+    watchers: 4572,
+    investorAvatars: ['A', 'B', 'C'],
+    investorOverflow: 0,
+    narratives: ['gamefi', 'NFT'],
+    narrativeOverflow: 0,
+    moniScore: 14572,
+    moniPct: 55,
   },
 ]
 

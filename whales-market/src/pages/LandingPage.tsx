@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   Search, ChevronLeft, ChevronRight,
@@ -66,6 +66,7 @@ const CHAIN_BG_CLASS: Record<HomeMarket['network'], string> = {
   solana:   'bg-chain-sol',
   base:     'bg-chain-base',
   bnb:      'bg-chain-bnb',
+  sui:      'bg-[#4DA2FF]',
 }
 
 // Token logo images — keyed by ticker symbol
@@ -428,15 +429,16 @@ const MindMapFillIcon: React.FC<{ size?: number; className?: string }> = ({ size
   </svg>
 )
 
-// table-heading-sort icon — Figma 35281:21856 — two filled chevrons, active one highlighted
-const TableSortIcon: React.FC<{ field: SortKey; sortKey: SortKey; sortDir: 'asc' | 'desc' }> = ({ field, sortKey, sortDir }) => {
+// table-heading-sort icon — Figma component 35281:21856, 16×16
+// Variants: default (both #7A7A83), up (#F9F9FA up / #7A7A83 down), down (vice-versa)
+const TableSortIcon: React.FC<{ field: string; sortKey: string; sortDir: 'asc' | 'desc' }> = ({ field, sortKey, sortDir }) => {
   const isActive = field === sortKey
-  const upColor   = isActive && sortDir === 'asc'  ? '#F9F9FA' : '#52525B'
-  const downColor = isActive && sortDir === 'desc' ? '#F9F9FA' : '#52525B'
+  const upColor   = isActive && sortDir === 'asc'  ? '#F9F9FA' : '#7A7A83'
+  const downColor = isActive && sortDir === 'desc' ? '#F9F9FA' : '#7A7A83'
   return (
-    <svg width="12" height="16" viewBox="0 0 12 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M6 1L11 6H1L6 1Z" fill={upColor} />
-      <path d="M6 15L1 10H11L6 15Z" fill={downColor} />
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path fillRule="evenodd" clipRule="evenodd" d="M7.44604 3.24253C7.59297 3.08724 7.79223 3 8 3C8.20777 3 8.40703 3.08724 8.55396 3.24253L10.7706 5.58598C10.8802 5.70188 10.9548 5.84954 10.985 6.01028C11.0152 6.17102 10.9996 6.33762 10.9402 6.48899C10.8808 6.64037 10.7803 6.76972 10.6514 6.86068C10.5224 6.95165 10.3709 7.00013 10.2158 7H5.78415C5.62914 7.00013 5.47758 6.95165 5.34864 6.86068C5.2197 6.76972 5.11917 6.64037 5.05978 6.48899C5.0004 6.33762 4.98481 6.17102 5.01501 6.01028C5.0452 5.84954 5.11982 5.70188 5.22941 5.58598L7.44604 3.24253Z" fill={upColor} />
+      <path fillRule="evenodd" clipRule="evenodd" d="M8.55396 12.7575C8.40703 12.9128 8.20777 13 8 13C7.79223 13 7.59297 12.9128 7.44604 12.7575L5.22941 10.414C5.11982 10.2981 5.0452 10.1505 5.01501 9.98972C4.98481 9.82898 5.0004 9.66238 5.05978 9.511C5.11917 9.35963 5.2197 9.23028 5.34864 9.13932C5.47758 9.04835 5.62914 8.99987 5.78415 9H10.2158C10.3709 8.99987 10.5224 9.04835 10.6514 9.13932C10.7803 9.23028 10.8808 9.35963 10.9402 9.511C10.9996 9.66238 11.0152 9.82898 10.985 9.98972C10.9548 10.1505 10.8802 10.2981 10.7706 10.414L8.55396 12.7575Z" fill={downColor} />
     </svg>
   )
 }
@@ -455,119 +457,182 @@ type SortKey = 'price' | 'vol24h' | 'totalVol' | 'fdv' | 'priceChange24h'
 
 // ─── Skeleton loader for tab transitions ────────────────────────────────────
 const SkeletonRow: React.FC = () => (
-  <div className="flex items-center gap-4 p-5 rounded-[12px] bg-[rgba(255,255,255,0.03)] border border-[#252527] animate-pulse">
-    <div className="w-11 h-11 rounded-full bg-[#252527] shrink-0" />
-    <div className="flex-1 space-y-2">
-      <div className="h-4 w-20 bg-[#252527] rounded" />
-      <div className="h-3 w-28 bg-[#1b1b1c] rounded" />
-    </div>
-    <div className="text-right space-y-2 shrink-0">
-      <div className="h-4 w-24 bg-[#252527] rounded ml-auto" />
-      <div className="h-3 w-16 bg-[#1b1b1c] rounded ml-auto" />
-    </div>
-    <div className="w-[100px] h-9 bg-[#252527] rounded-xl shrink-0" />
-  </div>
+  <tr className="border-b border-border-subtle animate-pulse">
+    <td className="pl-2 pr-2 py-4"><div className="flex items-center gap-3"><div className="w-11 h-11 rounded-full bg-[#252527]" /><div className="space-y-2"><div className="h-4 w-16 bg-[#252527] rounded" /><div className="h-3 w-24 bg-[#1b1b1c] rounded" /></div></div></td>
+    <td className="px-3 py-4"><div className="h-4 w-12 bg-[#252527] rounded" /></td>
+    <td className="px-3 py-4"><div className="flex gap-[-6px]">{[0,1,2].map(i => <div key={i} className="w-5 h-5 rounded-full bg-[#252527]" />)}</div></td>
+    <td className="px-3 py-4"><div className="flex gap-1"><div className="h-5 w-14 bg-[#252527] rounded-full" /><div className="h-5 w-10 bg-[#252527] rounded-full" /></div></td>
+    <td className="px-3 py-4"><div className="flex items-center gap-2"><div className="h-1 w-[120px] bg-[#252527] rounded-full" /><div className="h-4 w-12 bg-[#252527] rounded" /></div></td>
+  </tr>
 )
 
 // ─── Upcoming Tab Content ───────────────────────────────────────────────────
-// Figma node 42540-727391 — card grid layout
-// Cards: 2-col desktop, 1-col mobile, each with token icon + info + countdown + CTA
+// Figma node 42540-727391 — table layout matching Live Market structure
+// 5 visible cols: Token(~42%) | Watchers(~14.3%) | Investors & Backers(~14.3%) | Narrative(~14.3%) | Moni Score(~14.3%)
+
+type UpcomingSortKey = 'watchers' | 'moniScore'
 
 const UpcomingTabContent: React.FC<{ loading: boolean }> = ({ loading }) => {
   const navigate = useNavigate()
+  const [sortKey, setSortKey] = useState<UpcomingSortKey>('moniScore')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
 
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        {Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)}
-      </div>
-    )
+  const handleUpcomingSort = (field: UpcomingSortKey) => {
+    if (sortKey === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(field); setSortDir('desc') }
   }
 
+  const sorted = useMemo(() =>
+    [...mockUpcomingListings].sort((a, b) => {
+      const dir = sortDir === 'asc' ? 1 : -1
+      return (a[sortKey] > b[sortKey] ? 1 : -1) * dir
+    }),
+    [sortKey, sortDir]
+  )
+
+  const fmtNum = (n: number) => n.toLocaleString('en-US')
+
+  const UPCOMING_COLS: { label: string; field: UpcomingSortKey | null; w: string }[] = [
+    { label: 'Token',                field: null,        w: '42%' },
+    { label: 'Watchers',             field: 'watchers',  w: '14%' },
+    { label: 'Investors & Backers',  field: null,        w: '15%' },
+    { label: 'Narrative',            field: null,        w: '14%' },
+    { label: 'Moni Score',           field: 'moniScore', w: '15%' },
+  ]
+
   return (
-    <div className="mt-4">
-      {/* Header row: title + description + nav arrows */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4 flex-wrap">
-          <span className="text-[14px] font-[400] leading-[20px] text-[#7a7a83]">
-            Trade pre-TGE token allocations.
-          </span>
-          <button className="text-[14px] font-[400] leading-[20px] text-[#7a7a83] hover:text-[#f9f9fa] transition-colors underline underline-offset-2">
-            How it works?
-          </button>
-        </div>
-      </div>
-
-      {/* Card grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {mockUpcomingListings.map((listing: UpcomingListing) => (
-          <button
-            key={listing.id}
-            onClick={() => navigate(`/market/${listing.id}`)}
-            className="flex items-center gap-4 p-5 rounded-[12px] bg-[rgba(255,255,255,0.03)] border border-[#252527]
-                       hover:border-[#3a3a3f] hover:bg-[rgba(255,255,255,0.05)]
-                       transition-all duration-200 cursor-pointer group text-left w-full"
-          >
-            {/* Token icon — 44×44, rounded-full, TOKEN_LOGOS or emoji fallback */}
-            <div className="w-11 h-11 rounded-full bg-[#252527] flex items-center justify-center text-2xl shrink-0 overflow-hidden">
-              {TOKEN_LOGOS[listing.token] ? (
-                <img
-                  src={TOKEN_LOGOS[listing.token]}
-                  alt={listing.token}
-                  className="w-full h-full object-cover rounded-full"
-                />
-              ) : (
-                listing.logo
-              )}
-            </div>
-
-            {/* Token info — ticker + SOON badge + name */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-[16px] font-[600] leading-[24px] text-[#f9f9fa] group-hover:text-accent transition-colors">
-                  {listing.token}
+    <div className="overflow-x-auto">
+      <table className="w-full table-fixed min-w-[700px]">
+        <thead>
+          <tr className="border-b border-border-subtle">
+            {UPCOMING_COLS.map((col, idx) => (
+              <th
+                key={col.label}
+                style={{ width: col.w }}
+                onClick={() => col.field && handleUpcomingSort(col.field)}
+                className={clsx(
+                  'py-2 pr-2 text-12 font-normal text-text-muted whitespace-nowrap',
+                  idx === 0 ? 'pl-2 text-left' : 'pl-3 text-left',
+                  col.field && 'cursor-pointer hover:text-text-primary transition-colors select-none',
+                )}
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  {col.label}
+                  {col.field && (
+                    <TableSortIcon field={col.field} sortKey={sortKey} sortDir={sortDir} />
+                  )}
                 </span>
-                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-[600] leading-[12px] bg-[#5bd197]/10 text-[#5bd197] shrink-0">
-                  SOON
-                </span>
-              </div>
-              <span className="text-[14px] font-[400] leading-[20px] text-[#7a7a83] truncate block">
-                {listing.tokenName}
-              </span>
-            </div>
-
-            {/* Countdown / TBA */}
-            <div className="text-right shrink-0">
-              {listing.status === 'countdown' && listing.countdown ? (
-                <>
-                  <div className="flex items-baseline gap-0.5 justify-end">
-                    <span className="text-[16px] font-[600] leading-[24px] text-[#f9f9fa] tabular-nums">{listing.countdown.days}</span>
-                    <span className="text-[14px] font-[400] leading-[20px] text-[#7a7a83]">d</span>
-                    <span className="text-[16px] font-[600] leading-[24px] text-[#f9f9fa] tabular-nums ml-1">{listing.countdown.hours}</span>
-                    <span className="text-[14px] font-[400] leading-[20px] text-[#7a7a83]">h</span>
-                    <span className="text-[16px] font-[600] leading-[24px] text-[#f9f9fa] tabular-nums ml-1">{listing.countdown.minutes}</span>
-                    <span className="text-[14px] font-[400] leading-[20px] text-[#7a7a83]">m</span>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)
+          ) : (
+            sorted.map(listing => (
+              <tr
+                key={listing.id}
+                onClick={() => navigate(`/market/${listing.id}`)}
+                className="border-b border-border-subtle hover:bg-white/[0.02] transition-colors cursor-pointer group"
+              >
+                {/* ── Token cell — logo(44×44) + chain badge(16×16) + name stack ── */}
+                <td className="pl-2 pr-2 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="relative shrink-0">
+                      <div className="w-11 h-11 rounded-full bg-[#252527] flex items-center justify-center text-2xl overflow-hidden">
+                        {TOKEN_LOGOS[listing.token] ? (
+                          <img src={TOKEN_LOGOS[listing.token]} alt={listing.token} className="w-full h-full object-cover rounded-full" />
+                        ) : (
+                          listing.logo
+                        )}
+                      </div>
+                      <NetworkBadge network={listing.network} />
+                    </div>
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-14 font-medium text-text-primary group-hover:text-accent transition-colors truncate">
+                          {listing.token}
+                        </span>
+                        {listing.isNew && (
+                          <span className="px-1.5 py-0.5 rounded-full text-10 font-medium bg-info-scale-400/10 text-info-scale-400 shrink-0 tracking-wide">
+                            NEW MARKET
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-14 font-normal text-text-muted truncate">{listing.tokenName}</span>
+                    </div>
                   </div>
-                  <span className="text-[10px] font-[400] text-[#7a7a83] mt-0.5 block">listing time</span>
-                </>
-              ) : (
-                <>
-                  <span className="text-[14px] font-[400] leading-[20px] text-[#7a7a83] block">To be announced</span>
-                  <span className="text-[10px] font-[400] text-[#7a7a83] mt-0.5 block">listing time</span>
-                </>
-              )}
-            </div>
+                </td>
 
-            {/* See details CTA — white button */}
-            <span
-              className="shrink-0 px-4 py-2 rounded-xl bg-white text-[#0a0a0b] text-[14px] font-[600] leading-[20px]
-                         group-hover:bg-neutral-100 group-active:bg-neutral-200 transition-colors whitespace-nowrap"
-            >
-              See details
-            </span>
-          </button>
-        ))}
-      </div>
+                {/* ── Watchers ── */}
+                <td className="pl-3 pr-2 py-4">
+                  <span className="text-14 font-medium text-text-primary">{fmtNum(listing.watchers)}</span>
+                </td>
+
+                {/* ── Investors & Backers — avatar stack + overflow badge ── */}
+                <td className="pl-3 pr-2 py-4">
+                  {listing.investorAvatars.length > 0 ? (
+                    <div className="flex items-center">
+                      {listing.investorAvatars.slice(0, 5).map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-5 h-5 rounded-full bg-gradient-to-br from-[#3a3a3f] to-[#252527] border-2 border-[#0a0a0b]"
+                          style={{ marginLeft: i > 0 ? '-6px' : 0, zIndex: 5 - i }}
+                        />
+                      ))}
+                      {listing.investorOverflow > 0 && (
+                        <span className="ml-1 px-1.5 py-0.5 rounded-full bg-[#1b1b1c] text-[10px] font-medium text-text-primary leading-none">
+                          +{listing.investorOverflow}
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-14 font-medium text-text-primary">-</span>
+                  )}
+                </td>
+
+                {/* ── Narrative — pill badges ── */}
+                <td className="pl-3 pr-2 py-4">
+                  {listing.narratives.length > 0 ? (
+                    <div className="flex items-center gap-1 flex-wrap">
+                      {listing.narratives.map(tag => (
+                        <span key={tag} className="px-2 py-1 rounded-full bg-[#1b1b1c] text-[10px] font-medium text-text-primary leading-none">
+                          {tag}
+                        </span>
+                      ))}
+                      {listing.narrativeOverflow > 0 && (
+                        <span className="px-2 py-1 rounded-full bg-[#1b1b1c] text-[10px] font-medium text-text-primary leading-none">
+                          +{listing.narrativeOverflow}
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-14 font-medium text-text-primary">-</span>
+                  )}
+                </td>
+
+                {/* ── Moni Score — bar + number ── */}
+                <td className="pl-3 pr-2 py-4">
+                  <div className="flex items-center gap-2">
+                    <div className="relative w-[120px] h-1 bg-[#252527] rounded-full shrink-0">
+                      <div
+                        className="absolute top-0 left-0 h-1 bg-[#5bd197] rounded-full"
+                        style={{ width: `${listing.moniPct}%` }}
+                      />
+                      <div
+                        className="absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-[#f9f9fa] rounded-full"
+                        style={{ left: `${listing.moniPct}%`, marginLeft: '-4px' }}
+                      />
+                    </div>
+                    <span className="text-12 font-medium text-text-primary tabular-nums">{fmtNum(listing.moniScore)}</span>
+                  </div>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
     </div>
   )
 }
@@ -789,7 +854,7 @@ const LiveMarketTable: React.FC = () => {
                   <span className="inline-flex items-center gap-1.5">
                     {col.label}
                     {col.field && (
-                      <TableSortIcon field={col.field as SortKey} sortKey={sortKey} sortDir={sortDir} />
+                      <TableSortIcon field={col.field} sortKey={sortKey} sortDir={sortDir} />
                     )}
                   </span>
                 </th>
