@@ -10,6 +10,7 @@ import chainSolanaImg  from '@/assets/images/chain-solana.png'
 import chainEthImg     from '@/assets/images/chain-ethereum.png'
 import chainHlImg      from '@/assets/images/chain-monad.png'
 import chainBnbImg     from '@/assets/images/chain-bnb.png'
+import usdcIconImg     from '@/assets/images/usdc-icon.png'
 import tokenSkateImg   from '@/assets/images/token-skate.png'
 import tokenEraImg     from '@/assets/images/token-era.png'
 import tokenGrassImg   from '@/assets/images/token-grass.png'
@@ -1242,20 +1243,78 @@ const TokenDot: React.FC<{ token: string; size?: number }> = ({ token, size = 16
   </div>
 )
 
-// SharkIcon — Figma: primary fill=#0A71CD, eye=#0A0A0B, 16×16
+// ─── Animal icons — Figma components: shark / whale / shrimp ─────────────────
+
+// SharkIcon — Figma: body=#0A71CD, fin=#B4B4BA, eye=#0A0A0B, 16×16
 const SharkIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 16 16" fill="none"
     xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    {/* dorsal fin */}
-    <path d="M8 2.5L10 5.5H6.5L8 2.5Z" fill="#0A71CD" stroke="#0A0A0B" strokeWidth="0.35" strokeLinejoin="round" />
+    {/* dorsal fin — gray #B4B4BA */}
+    <path d="M9 2L11 6H7.5L9 2Z" fill="#B4B4BA" />
     {/* body */}
-    <ellipse cx="8" cy="9" rx="6.5" ry="3" fill="#0A71CD" />
-    {/* tail fin */}
-    <path d="M1.5 9Q1 11.5 3.5 12.5Q2 10 3 9" fill="#0A71CD" />
+    <ellipse cx="8" cy="9.5" rx="6.5" ry="3" fill="#0A71CD" />
+    {/* tail */}
+    <path d="M1.5 9.5Q0.5 12 3 13Q1.5 10.5 2.5 9.5Z" fill="#0A71CD" />
     {/* eye */}
-    <circle cx="12.5" cy="8.5" r="0.75" fill="#0A0A0B" />
+    <circle cx="12.5" cy="9" r="0.8" fill="#0A0A0B" />
   </svg>
 )
+
+// WhaleIcon — Figma: fill=#27C9D8 (cyan), 16×16
+const WhaleIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none"
+    xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    {/* body */}
+    <ellipse cx="8" cy="9" rx="7" ry="3.5" fill="#27C9D8" />
+    {/* tail flukes */}
+    <path d="M1 9Q0 12.5 3 13Q1.5 10 2 9Z" fill="#27C9D8" />
+    <path d="M1 9Q0 6 3 6Q1.5 8.5 2 9Z" fill="#27C9D8" />
+    {/* spout */}
+    <path d="M10 5.5Q11 2 12 3Q11.5 4.5 11 5.5Z" stroke="#27C9D8" strokeWidth="1" strokeLinecap="round" />
+    {/* eye */}
+    <circle cx="12.5" cy="8.5" r="0.8" fill="#0A0A0B" />
+  </svg>
+)
+
+// ShrimpIcon — Figma: fill=#FF8F3C (orange), 16×16
+const ShrimpIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none"
+    xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    {/* body arc */}
+    <path d="M11 3Q14 6 13 9Q12 12 8 13Q5 13.5 3 12" stroke="#FF8F3C" strokeWidth="2" strokeLinecap="round" fill="none" />
+    {/* head */}
+    <circle cx="11.5" cy="3.5" r="1.5" fill="#FF8F3C" />
+    {/* tail fan */}
+    <path d="M3 12L1.5 14M3 12L2 14.5M3 12L3.5 14.5" stroke="#FF8F3C" strokeWidth="1" strokeLinecap="round" />
+    {/* antennae */}
+    <path d="M11.5 2Q13 0.5 14 1" stroke="#FF8F3C" strokeWidth="0.8" strokeLinecap="round" />
+    <path d="M11.5 2Q12 0 13.5 0.5" stroke="#FF8F3C" strokeWidth="0.8" strokeLinecap="round" />
+  </svg>
+)
+
+// UsdtIcon — inline SVG (standard teal #26A17B with T), 16×16
+const UsdtIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none"
+    xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <circle cx="8" cy="8" r="8" fill="#26A17B" />
+    <text x="8" y="11.5" textAnchor="middle" fill="white"
+      fontSize="8" fontWeight="700" fontFamily="Arial,sans-serif">₮</text>
+  </svg>
+)
+
+// Collateral token icon — USDC image, USDT inline SVG, others fallback to TokenDot
+const CollateralTokenIcon: React.FC<{ token: string; size?: number }> = ({ token, size = 16 }) => {
+  if (token === 'USDC') return <img src={usdcIconImg} alt="USDC" className="rounded-full object-cover shrink-0" style={{ width: size, height: size }} />
+  if (token === 'USDT') return <UsdtIcon size={size} />
+  return <TokenDot token={token} size={size} />
+}
+
+// Animal icon router
+const AnimalIcon: React.FC<{ animal: 'shark' | 'whale' | 'shrimp'; size?: number }> = ({ animal, size = 16 }) => {
+  if (animal === 'whale')  return <WhaleIcon size={size} />
+  if (animal === 'shrimp') return <ShrimpIcon size={size} />
+  return <SharkIcon size={size} />
+}
 
 const RecentTradesTable: React.FC = () => (
   // Figma: recent-trades-update — VERTICAL layout, py=16px (py-4), gap=16px (gap-4)
@@ -1370,32 +1429,29 @@ const RecentTradesTable: React.FC = () => (
                 </span>
               </td>
 
-              {/* ── Col 4: Amount — right-aligned, amount text + token circle 16×16 ── */}
-              {/* Figma: HORIZONTAL, primaryAxisAlignItems=MAX, gap=8px */}
+              {/* ── Col 4: Amount — text only, no token icon ── */}
               <td className="px-2 py-4">
-                <div className="flex items-center justify-end gap-2">
+                <div className="flex items-center justify-end">
                   <span className="text-[14px] font-[500] leading-[20px] text-[#f9f9fa] tabular-nums whitespace-nowrap">
                     {trade.amount}
                   </span>
-                  {/* image-slot 16×16, token image fill, radius=9999 */}
-                  <TokenDot token={trade.amountToken} size={16} />
                 </div>
               </td>
 
-              {/* ── Col 5: Collateral — right-aligned, amount + token-slot + shark-slot ── */}
-              {/* Figma: HORIZONTAL, primaryAxisAlignItems=MAX, gap=8px */}
+              {/* ── Col 5: Collateral — amount + USDC/USDT image + animal icon ── */}
+              {/* Figma: [amount] [collateral image-slot 20×20] [animal icon-slot 20×20] */}
               <td className="px-2 py-4">
                 <div className="flex items-center justify-end gap-2">
                   <span className="text-[14px] font-[500] leading-[20px] text-[#f9f9fa] tabular-nums whitespace-nowrap">
                     {trade.collateral}
                   </span>
-                  {/* collateral token icon-slot: 20×20, p=2 → 16×16 rounded-full */}
-                  <span className="w-5 h-5 flex items-center justify-center p-0.5 shrink-0">
-                    <TokenDot token={trade.collateralToken} size={16} />
+                  {/* collateral token image-slot: 20×20, p=2 → 16×16 */}
+                  <span className="w-5 h-5 flex items-center justify-center shrink-0">
+                    <CollateralTokenIcon token={trade.collateralToken} size={16} />
                   </span>
-                  {/* shark icon-slot: 20×20, p=2 → 16×16, #0A71CD fill */}
-                  <span className="w-5 h-5 flex items-center justify-center p-0.5 shrink-0">
-                    <SharkIcon size={16} />
+                  {/* animal icon-slot: 20×20, p=2 → 16×16 */}
+                  <span className="w-5 h-5 flex items-center justify-center shrink-0">
+                    <AnimalIcon animal={trade.animal} size={16} />
                   </span>
                 </div>
               </td>
