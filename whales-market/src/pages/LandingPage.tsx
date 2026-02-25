@@ -883,38 +883,12 @@ const RecentTradesTable: React.FC = () => (
     {/* ── Block title (block-title) ──────────────────────────────────────────
         Figma: 1344×36 | HORIZONTAL | SPACE_BETWEEN | border-bottom 1px #1B1B1C
     ───────────────────────────────────────────────────────────────────────── */}
-    <div className="flex items-center justify-between h-9 border-b border-[#1b1b1c]">
-
-      {/* Tab: "Recent Trades" 20px/500/#F9F9FA + green badge */}
+    <div className="flex items-center h-9">
+      {/* "Recent Trades" 20px/500/#F9F9FA + green badge */}
       <span className="flex items-center gap-2 text-[20px] font-[500] leading-[28px] text-[#f9f9fa]">
         Recent Trades
         <TabBadge count={mockHomeRecentTrades.length} active={true} />
       </span>
-
-      {/* Buttons area: 179×36 | gap=8px */}
-      <div className="flex items-center gap-2">
-        {/* Show All — Figma: pill r=9999, border #252527, p=L16/R16/T8/B8 */}
-        <button className="flex items-center justify-center px-4 py-2 rounded-full border border-[#252527]
-                           text-[14px] font-[500] leading-[20px] text-[#f9f9fa]
-                           hover:border-[#3a3a3f] active:bg-[#252527] transition-colors whitespace-nowrap">
-          Show All
-        </button>
-
-        {/* Nav arrows — Figma: 36×36, pill r=9999, border #252527, icon-slot 20×20, fill=#F9F9FA */}
-        {([LeftFillIcon, RightFillIcon] as const).map((Icon, i) => (
-          <button
-            key={i}
-            className="w-9 h-9 rounded-full border border-[#252527] flex items-center justify-center
-                       text-[#f9f9fa] hover:border-[#3a3a3f] active:bg-[#252527] transition-colors"
-            style={{ boxSizing: 'border-box' }}
-            aria-label={i === 0 ? 'Previous' : 'Next'}
-          >
-            <span className="w-5 h-5 flex items-center justify-center p-0.5">
-              <Icon size={16} />
-            </span>
-          </button>
-        ))}
-      </div>
     </div>
 
     {/* ── Table (open-offers-list) ───────────────────────────────────────────
@@ -996,11 +970,19 @@ const RecentTradesTable: React.FC = () => (
                 </div>
               </td>
 
-              {/* ── Col 2: Pair — icon-slot 20×20 (p=2→16×16 circle) + pair name 14px/500/#F9F9FA ── */}
+              {/* ── Col 2: Pair — 20×20 icon slot: real img from TOKEN_LOGOS or TokenDot fallback ── */}
               <td className="px-2 py-4">
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 flex items-center justify-center p-0.5 shrink-0">
-                    <TokenDot token={trade.baseToken} size={16} />
+                  <span className="w-5 h-5 flex items-center justify-center shrink-0">
+                    {TOKEN_LOGOS[trade.baseToken] ? (
+                      <img
+                        src={TOKEN_LOGOS[trade.baseToken]}
+                        alt={trade.baseToken}
+                        className="w-4 h-4 rounded-full object-cover"
+                      />
+                    ) : (
+                      <TokenDot token={trade.baseToken} size={16} />
+                    )}
                   </span>
                   <span className="text-[14px] font-[500] leading-[20px] text-[#f9f9fa] whitespace-nowrap">
                     {trade.pair}
