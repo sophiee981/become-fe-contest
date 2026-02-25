@@ -21,7 +21,7 @@ import { PageWrapper } from '@/components/layout/PageWrapper'
 import {
   mockHomeMarkets, mockHomeRecentTrades, mockUpcomingListings,
   HOME_STATS, METRICS,
-  type HomeMarket, type HomeRecentTrade,
+  type HomeMarket, type HomeRecentTrade, type UpcomingListing,
 } from '@/mock-data/homeData'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -453,15 +453,143 @@ type NetworkId = typeof NETWORKS[number]['id']
 
 type SortKey = 'price' | 'vol24h' | 'totalVol' | 'fdv' | 'priceChange24h'
 
+// ─── Skeleton loader for tab transitions ────────────────────────────────────
+const SkeletonRow: React.FC = () => (
+  <div className="flex items-center gap-4 p-5 rounded-[12px] bg-[rgba(255,255,255,0.03)] border border-[#252527] animate-pulse">
+    <div className="w-11 h-11 rounded-full bg-[#252527] shrink-0" />
+    <div className="flex-1 space-y-2">
+      <div className="h-4 w-20 bg-[#252527] rounded" />
+      <div className="h-3 w-28 bg-[#1b1b1c] rounded" />
+    </div>
+    <div className="text-right space-y-2 shrink-0">
+      <div className="h-4 w-24 bg-[#252527] rounded ml-auto" />
+      <div className="h-3 w-16 bg-[#1b1b1c] rounded ml-auto" />
+    </div>
+    <div className="w-[100px] h-9 bg-[#252527] rounded-xl shrink-0" />
+  </div>
+)
+
+// ─── Upcoming Tab Content ───────────────────────────────────────────────────
+// Figma node 42540-727391 — card grid layout
+// Cards: 2-col desktop, 1-col mobile, each with token icon + info + countdown + CTA
+
+const UpcomingTabContent: React.FC<{ loading: boolean }> = ({ loading }) => {
+  const navigate = useNavigate()
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        {Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)}
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-4">
+      {/* Header row: title + description + nav arrows */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-4 flex-wrap">
+          <span className="text-[14px] font-[400] leading-[20px] text-[#7a7a83]">
+            Trade pre-TGE token allocations.
+          </span>
+          <button className="text-[14px] font-[400] leading-[20px] text-[#7a7a83] hover:text-[#f9f9fa] transition-colors underline underline-offset-2">
+            How it works?
+          </button>
+        </div>
+      </div>
+
+      {/* Card grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {mockUpcomingListings.map((listing: UpcomingListing) => (
+          <button
+            key={listing.id}
+            onClick={() => navigate(`/market/${listing.id}`)}
+            className="flex items-center gap-4 p-5 rounded-[12px] bg-[rgba(255,255,255,0.03)] border border-[#252527]
+                       hover:border-[#3a3a3f] hover:bg-[rgba(255,255,255,0.05)]
+                       transition-all duration-200 cursor-pointer group text-left w-full"
+          >
+            {/* Token icon — 44×44, rounded-full, TOKEN_LOGOS or emoji fallback */}
+            <div className="w-11 h-11 rounded-full bg-[#252527] flex items-center justify-center text-2xl shrink-0 overflow-hidden">
+              {TOKEN_LOGOS[listing.token] ? (
+                <img
+                  src={TOKEN_LOGOS[listing.token]}
+                  alt={listing.token}
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                listing.logo
+              )}
+            </div>
+
+            {/* Token info — ticker + SOON badge + name */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-[16px] font-[600] leading-[24px] text-[#f9f9fa] group-hover:text-accent transition-colors">
+                  {listing.token}
+                </span>
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-[600] leading-[12px] bg-[#5bd197]/10 text-[#5bd197] shrink-0">
+                  SOON
+                </span>
+              </div>
+              <span className="text-[14px] font-[400] leading-[20px] text-[#7a7a83] truncate block">
+                {listing.tokenName}
+              </span>
+            </div>
+
+            {/* Countdown / TBA */}
+            <div className="text-right shrink-0">
+              {listing.status === 'countdown' && listing.countdown ? (
+                <>
+                  <div className="flex items-baseline gap-0.5 justify-end">
+                    <span className="text-[16px] font-[600] leading-[24px] text-[#f9f9fa] tabular-nums">{listing.countdown.days}</span>
+                    <span className="text-[14px] font-[400] leading-[20px] text-[#7a7a83]">d</span>
+                    <span className="text-[16px] font-[600] leading-[24px] text-[#f9f9fa] tabular-nums ml-1">{listing.countdown.hours}</span>
+                    <span className="text-[14px] font-[400] leading-[20px] text-[#7a7a83]">h</span>
+                    <span className="text-[16px] font-[600] leading-[24px] text-[#f9f9fa] tabular-nums ml-1">{listing.countdown.minutes}</span>
+                    <span className="text-[14px] font-[400] leading-[20px] text-[#7a7a83]">m</span>
+                  </div>
+                  <span className="text-[10px] font-[400] text-[#7a7a83] mt-0.5 block">listing time</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-[14px] font-[400] leading-[20px] text-[#7a7a83] block">To be announced</span>
+                  <span className="text-[10px] font-[400] text-[#7a7a83] mt-0.5 block">listing time</span>
+                </>
+              )}
+            </div>
+
+            {/* See details CTA — white button */}
+            <span
+              className="shrink-0 px-4 py-2 rounded-xl bg-white text-[#0a0a0b] text-[14px] font-[600] leading-[20px]
+                         group-hover:bg-neutral-100 group-active:bg-neutral-200 transition-colors whitespace-nowrap"
+            >
+              See details
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 const LiveMarketTable: React.FC = () => {
   const navigate = useNavigate()
   const [tab, setTab]           = useState<'live' | 'upcoming' | 'ended'>('live')
+  const [tabLoading, setTabLoading] = useState(false)
   const [search, setSearch]     = useState('')
   const [sortKey, setSortKey]   = useState<SortKey>('vol24h')
   const [sortDir, setSortDir]   = useState<'asc' | 'desc'>('desc')
   const [network, setNetwork]   = useState<NetworkId>('all')
   const [netOpen, setNetOpen]   = useState(false)
   const netRef                  = useRef<HTMLDivElement>(null)
+
+  // Simulate loading on tab switch
+  const switchTab = (t: 'live' | 'upcoming' | 'ended') => {
+    if (t === tab) return
+    setTabLoading(true)
+    setTab(t)
+    setTimeout(() => setTabLoading(false), 600)
+  }
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -506,7 +634,7 @@ const LiveMarketTable: React.FC = () => {
           {TABS.map(t => (
             <button
               key={t.id}
-              onClick={() => setTab(t.id)}
+              onClick={() => switchTab(t.id)}
               className={clsx(
                 'flex items-center gap-2 py-3 text-20 font-medium transition-all whitespace-nowrap',
                 tab === t.id
@@ -520,7 +648,7 @@ const LiveMarketTable: React.FC = () => {
           ))}
         </div>
 
-        <div className="flex items-center gap-2 py-3">
+        <div className={clsx('flex items-center gap-2 py-3 transition-opacity duration-200', tab !== 'live' && 'opacity-0 pointer-events-none')}>
           {/* Search — transparent bg, border only, fixed 256px */}
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#252527] focus-within:border-[#3a3a3f] transition-colors" style={{ width: 256 }}>
             <Search size={14} className="text-[#7a7a83] shrink-0" />
@@ -600,10 +728,8 @@ const LiveMarketTable: React.FC = () => {
                           {/* Leading icon-slot: 20×20 outer, 2px padding → 16×16 inner */}
                           <span className="w-5 h-5 shrink-0 flex items-center justify-center p-0.5">
                             {net.logo ? (
-                              /* Chain image: 16×16, r=4px */
                               <img src={net.logo} alt={net.label} className="w-4 h-4 rounded-[4px] object-cover" />
                             ) : (
-                              /* "All Networks": mind_map_fill icon — node 22283:7879, fill=#F9F9FA */
                               <MindMapFillIcon size={16} className="text-[#f9f9fa]" />
                             )}
                           </span>
@@ -616,7 +742,6 @@ const LiveMarketTable: React.FC = () => {
                           {/* Trailing check_fill: 20×20 slot, fill=#5BD197, visible only when selected */}
                           <span className="w-5 h-5 shrink-0 flex items-center justify-center p-0.5">
                             {isActive && (
-                              /* check_fill — Figma node 22283:7535, fill=#5BD197 */
                               <svg width="16" height="16" viewBox="0 0 20 15" fill="#5BD197" aria-hidden="true">
                                 <path d="M19.5499 0.43968C19.8311 0.720971 19.9891 1.10243 19.9891 1.50018C19.9891 1.89793 19.8311 2.27939 19.5499 2.56068L8.30693 13.8037C8.15835 13.9523 7.98196 14.0702 7.78781 14.1506C7.59367 14.231 7.38558 14.2724 7.17543 14.2724C6.96529 14.2724 6.7572 14.231 6.56305 14.1506C6.36891 14.0702 6.19251 13.9523 6.04393 13.8037L0.457932 8.21868C0.314667 8.08031 0.200394 7.91479 0.12178 7.73179C0.0431668 7.54878 0.00178736 7.35195 5.66349e-05 7.15278C-0.00167409 6.95361 0.0362786 6.75609 0.1117 6.57175C0.187121 6.3874 0.298501 6.21993 0.43934 6.07909C0.580179 5.93825 0.747657 5.82687 0.932001 5.75145C1.11635 5.67603 1.31387 5.63807 1.51303 5.6398C1.7122 5.64153 1.90903 5.68291 2.09204 5.76153C2.27505 5.84014 2.44056 5.95441 2.57893 6.09768L7.17493 10.6937L17.4279 0.43968C17.5672 0.30029 17.7326 0.189715 17.9147 0.114273C18.0967 0.0388304 18.2919 0 18.4889 0C18.686 0 18.8811 0.0388304 19.0632 0.114273C19.2452 0.189715 19.4106 0.30029 19.5499 0.43968Z" />
                               </svg>
@@ -633,7 +758,10 @@ const LiveMarketTable: React.FC = () => {
         </div>
       </div>
 
-      {/* Table — desktop: 6 cols fills full width; mobile: scrollable with min-width */}
+      {/* ── Tab content ─────────────────────────────────────────────────────── */}
+      {tab === 'upcoming' ? (
+        <UpcomingTabContent loading={tabLoading} />
+      ) : (
       <div className="overflow-x-auto">
         <table className="w-full table-fixed min-w-[700px]">
           <thead>
@@ -758,7 +886,6 @@ const LiveMarketTable: React.FC = () => {
                     • TBA         → muted "TBA"                                        */}
                 <td className="pl-4 pr-2 py-3 text-right">
                   {market.status === 'in-progress' && market.settleCountdown ? (
-                    /* items-end → countdown + pill both snap to right edge */
                     <div className="flex flex-col gap-1 items-end">
                       <span className="text-14 font-medium text-warning tabular-nums">
                         {market.settleCountdown}
@@ -779,7 +906,6 @@ const LiveMarketTable: React.FC = () => {
                   ) : market.settleDisplay === 'TBA' ? (
                     <span className="text-14 font-normal text-text-muted">TBA</span>
                   ) : (
-                    /* date 14/500 + time 14/400, both right-aligned */
                     <div className="flex flex-col gap-1 items-end">
                       <span className="text-14 font-medium text-text-primary tabular-nums">
                         {market.settleDisplay}
@@ -798,6 +924,7 @@ const LiveMarketTable: React.FC = () => {
           </tbody>
         </table>
       </div>
+      )}
     </div>
   )
 }
