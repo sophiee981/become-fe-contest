@@ -15,6 +15,7 @@ import tokenEraImg     from '@/assets/images/token-era.png'
 import tokenGrassImg   from '@/assets/images/token-grass.png'
 import tokenLoudImg    from '@/assets/images/token-loud.png'
 import tokenMmtImg     from '@/assets/images/token-mmt.png'
+import tokenZbtImg     from '@/assets/images/token-zbt.png'
 import { clsx } from 'clsx'
 import { PageWrapper } from '@/components/layout/PageWrapper'
 import {
@@ -74,6 +75,7 @@ const TOKEN_LOGOS: Record<string, string> = {
   GRASS: tokenGrassImg,
   LOUD:  tokenLoudImg,
   MMT:   tokenMmtImg,
+  ZBT:   tokenZbtImg,
 }
 const NetworkBadge: React.FC<{ network: HomeMarket['network'] }> = ({ network }) => {
   const logo = CHAIN_LOGOS[network]
@@ -703,8 +705,8 @@ const LiveMarketTable: React.FC = () => {
                           {market.token}
                         </span>
                         {market.isNew && (
-                          <span className="px-1.5 py-0.5 rounded-full text-10 font-medium bg-info-scale-400/10 text-info-scale-400 shrink-0">
-                            New
+                          <span className="px-1.5 py-0.5 rounded-full text-10 font-medium bg-info-scale-400/10 text-info-scale-400 shrink-0 tracking-wide">
+                            NEW MARKET
                           </span>
                         )}
                       </div>
