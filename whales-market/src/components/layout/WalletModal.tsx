@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { X, ArrowLeft } from 'lucide-react'
+import { X } from 'lucide-react'
 import { clsx } from 'clsx'
 import { Spinner } from '@/components/ui/Spinner'
 
@@ -238,28 +238,13 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, onCon
 
         {/* ── Header ─────────────────────────────────────────────────────
             Figma: 624×36 | horizontal | space-between
-            Back btn: 36×36 | r=9999 | bg=#252527 | arrow_left 16×16/#f9f9fa
-            Title: 18px/w500/#f9f9fa (centered)
+            Title: 18px/w500/#f9f9fa
             Close btn: 36×36 | r=9999 | bg=#252527 | close 16×16/#f9f9fa
         ─────────────────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between" style={{ minHeight: '36px' }}>
-          {/* Back button */}
-          <button
-            onClick={handleClose}
-            className="w-9 h-9 rounded-full bg-[#252527] flex items-center justify-center
-                       text-[#f9f9fa] hover:bg-[#2e2e34] active:bg-[#3a3a3a]
-                       transition-colors duration-150 shrink-0"
-            aria-label="Back"
-          >
-            <ArrowLeft size={16} />
-          </button>
-
-          {/* Title — centered */}
-          <h2 className="text-[18px] font-[500] leading-[28px] text-[#f9f9fa] absolute left-1/2 -translate-x-1/2">
+          <h2 className="text-[18px] font-[500] leading-[28px] text-[#f9f9fa]">
             Connect Wallet
           </h2>
-
-          {/* Close button */}
           <button
             onClick={handleClose}
             className="w-9 h-9 rounded-full bg-[#252527] flex items-center justify-center
