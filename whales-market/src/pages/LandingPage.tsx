@@ -10,6 +10,11 @@ import chainSolanaImg  from '@/assets/images/chain-solana.png'
 import chainEthImg     from '@/assets/images/chain-ethereum.png'
 import chainHlImg      from '@/assets/images/chain-monad.png'
 import chainBnbImg     from '@/assets/images/chain-bnb.png'
+import tokenSkateImg   from '@/assets/images/token-skate.png'
+import tokenEraImg     from '@/assets/images/token-era.png'
+import tokenGrassImg   from '@/assets/images/token-grass.png'
+import tokenLoudImg    from '@/assets/images/token-loud.png'
+import tokenMmtImg     from '@/assets/images/token-mmt.png'
 import { clsx } from 'clsx'
 import { PageWrapper } from '@/components/layout/PageWrapper'
 import {
@@ -60,6 +65,15 @@ const CHAIN_BG_CLASS: Record<HomeMarket['network'], string> = {
   solana:   'bg-chain-sol',
   base:     'bg-chain-base',
   bnb:      'bg-chain-bnb',
+}
+
+// Token logo images — keyed by ticker symbol
+const TOKEN_LOGOS: Record<string, string> = {
+  SKATE: tokenSkateImg,
+  ERA:   tokenEraImg,
+  GRASS: tokenGrassImg,
+  LOUD:  tokenLoudImg,
+  MMT:   tokenMmtImg,
 }
 const NetworkBadge: React.FC<{ network: HomeMarket['network'] }> = ({ network }) => {
   const logo = CHAIN_LOGOS[network]
@@ -129,8 +143,16 @@ const UpcomingSection: React.FC = () => (
           key={idx}
           className="flex items-center gap-4 p-5 rounded-[12px] bg-[rgba(255,255,255,0.03)] border border-[#252527] hover:border-[#3a3a3f] hover:bg-[rgba(255,255,255,0.05)] transition-all cursor-pointer group"
         >
-          <div className="w-11 h-11 rounded-full bg-[#252527] flex items-center justify-center text-2xl shrink-0">
-            {listing.logo}
+          <div className="w-11 h-11 rounded-full bg-[#252527] flex items-center justify-center text-2xl shrink-0 overflow-hidden">
+            {TOKEN_LOGOS[listing.token] ? (
+              <img
+                src={TOKEN_LOGOS[listing.token]}
+                alt={listing.token}
+                className="w-full h-full object-cover rounded-full"
+              />
+            ) : (
+              listing.logo
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
@@ -660,8 +682,16 @@ const LiveMarketTable: React.FC = () => {
                   <div className="flex items-center gap-3">
                     {/* Image slot: 44×44 container → 36×36 circle token + 16×16 chain badge (bottom-left) */}
                     <div className="relative shrink-0 w-11 h-11 flex items-center justify-center">
-                      <div className="w-9 h-9 rounded-full bg-bg-elevated flex items-center justify-center text-lg select-none">
-                        {market.logo}
+                      <div className="w-9 h-9 rounded-full bg-bg-elevated flex items-center justify-center text-lg select-none overflow-hidden">
+                        {TOKEN_LOGOS[market.token] ? (
+                          <img
+                            src={TOKEN_LOGOS[market.token]}
+                            alt={market.token}
+                            className="w-full h-full object-cover rounded-full"
+                          />
+                        ) : (
+                          market.logo
+                        )}
                       </div>
                       <NetworkBadge network={market.network} />
                     </div>
