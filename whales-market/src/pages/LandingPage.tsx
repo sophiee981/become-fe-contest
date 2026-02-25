@@ -508,70 +508,100 @@ const LiveMarketTable: React.FC = () => {
             />
           </div>
 
-          {/* Network filter — filter_2_fill icon + dropdown */}
+          {/* ── Network filter ────────────────────────────────────────────────
+              Figma: node 38214:311363 — trigger button 126×36
+              Padding=8px all | gap=6px | border=#252527 | r=8px
+              Leading: filter_2_fill 20×20 (p=2→16×16) fill=#F9F9FA
+              Label: "Network" 14px/w500/#F9F9FA
+              Trailing: down_fill 20×20 (p=2→16×16) fill=#7A7A83
+          ─────────────────────────────────────────────────────────────── */}
           <div className="relative" ref={netRef}>
             <button
               onClick={() => setNetOpen(o => !o)}
               className={clsx(
-                'flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-colors text-14 font-medium text-[#f9f9fa] whitespace-nowrap',
-                netOpen ? 'border-[#3a3a3f] bg-[#1b1b1c]' : 'border-[#252527] bg-transparent hover:border-[#3a3a3f] hover:bg-[#1b1b1c]',
+                'flex items-center gap-1.5 px-2 py-2 rounded-lg border transition-colors duration-150 text-[14px] font-[500] text-[#f9f9fa] whitespace-nowrap',
+                netOpen
+                  ? 'border-[#3a3a3f] bg-[#1b1b1c]'
+                  : 'border-[#252527] bg-transparent hover:border-[#3a3a3f] hover:bg-[#1b1b1c]',
               )}
             >
-              <Filter2FillIcon size={14} className="text-[#7a7a83]" />
+              {/* filter_2_fill: 20×20 slot, p=2px → 16×16 icon, fill=#F9F9FA */}
+              <span className="w-5 h-5 flex items-center justify-center p-0.5 shrink-0">
+                <Filter2FillIcon size={16} className="text-[#f9f9fa]" />
+              </span>
               <span>{network === 'all' ? 'Network' : activeNet.label}</span>
-              <DownFillIcon size={14} className={clsx('text-[#7a7a83] transition-transform duration-150', netOpen && 'rotate-180')} />
+              {/* down_fill: 20×20 slot, fill=#7A7A83, rotates 180° when open */}
+              <span className="w-5 h-5 flex items-center justify-center p-0.5 shrink-0">
+                <DownFillIcon size={16} className={clsx('text-[#7a7a83] transition-transform duration-150', netOpen && 'rotate-180')} />
+              </span>
             </button>
 
-            {/* Dropdown panel — Figma: select-network 192×220 bg=#1b1b1c, border=#252527, rounded-xl */}
+            {/* ── Dropdown panel ────────────────────────────────────────────
+                Figma: select-network INSTANCE, node 38214:311371
+                192×220px | bg=#1b1b1c | r=10px | shadow: 0 0 32px rgba(0,0,0,0.20)
+                No border. Inner menu-item-group: p=8px | gap=4px
+            ─────────────────────────────────────────────────────────────── */}
             {netOpen && (
-              <div className="absolute right-0 top-[calc(100%+6px)] z-50 w-[192px] bg-[#1b1b1c] border border-[#252527] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] overflow-hidden py-2 animate-dropdown-in">
+              <div
+                className="absolute right-0 top-[calc(100%+6px)] z-50 w-48 bg-[#1b1b1c] rounded-[10px] animate-dropdown-in"
+                style={{ boxShadow: '0 0 32px rgba(0,0,0,0.20)' }}
+              >
+                {/* Inner group: p=8px all, gap=4px (gap-1) */}
+                <div className="p-2 flex flex-col gap-1">
 
-                {/* Title — Figma: "Filter by Network" text-12 fill=#7a7a83, px-2 */}
-                <div className="px-2 pb-1">
-                  <span className="text-12 font-medium text-[#7a7a83]">Filter by Network</span>
-                </div>
+                  {/* Title: "Filter by Network" — 12px/w500/#7a7a83, py=4px px=8px */}
+                  <div className="px-2 py-1">
+                    <span className="text-[12px] font-[500] leading-[16px] text-[#7a7a83]">
+                      Filter by Network
+                    </span>
+                  </div>
 
-                {/* Options — gap-1 (4px) between items, Figma: dropdown-option-time 3 states */}
-                <div className="flex flex-col gap-1">
-                  {NETWORKS.map(net => {
-                    const isActive = network === net.id
-                    return (
-                      <button
-                        key={net.id}
-                        onClick={() => { setNetwork(net.id); setNetOpen(false) }}
-                        className={clsx(
-                          // Figma: px-2 (8px L/R), py-2, gap-2, w-full, transition
-                          'w-full flex items-center gap-2 px-2 py-2 text-14 transition-colors',
-                          isActive
-                            ? 'bg-[#252527] text-[#f9f9fa]'
-                            : 'text-[#f9f9fa] hover:bg-[#252527]',
-                        )}
-                      >
-                        {/* Leading: 20×20 outer frame, 16×16 inner logo/icon */}
-                        <span className="w-5 h-5 shrink-0 flex items-center justify-center">
-                          {net.logo ? (
-                            /* Chain logo: 16×16, border-radius 4px */
-                            <img src={net.logo} alt={net.label} className="w-4 h-4 rounded-[4px] object-cover" />
-                          ) : (
-                            /* "All Networks": mind_map_fill icon — Figma node 22283:7879 */
-                            <MindMapFillIcon size={16} className="text-[#7a7a83]" />
+                  {/* Options — Figma: dropdown-option-time 176×32px each
+                      r=8px | py=6px px=8px | gap=8px | 3 states: default / hover / selected */}
+                  <div className="flex flex-col gap-1">
+                    {NETWORKS.map(net => {
+                      const isActive = network === net.id
+                      return (
+                        <button
+                          key={net.id}
+                          onClick={() => { setNetwork(net.id); setNetOpen(false) }}
+                          className={clsx(
+                            'w-full flex items-center gap-2 px-2 py-1.5 rounded-lg',
+                            'text-[14px] font-[500] leading-[20px] transition-colors duration-150',
+                            isActive
+                              ? 'bg-[#252527] text-[#f9f9fa]'
+                              : 'text-[#f9f9fa] hover:bg-[#252527]',
                           )}
-                        </span>
+                        >
+                          {/* Leading icon-slot: 20×20 outer, 2px padding → 16×16 inner */}
+                          <span className="w-5 h-5 shrink-0 flex items-center justify-center p-0.5">
+                            {net.logo ? (
+                              /* Chain image: 16×16, r=4px */
+                              <img src={net.logo} alt={net.label} className="w-4 h-4 rounded-[4px] object-cover" />
+                            ) : (
+                              /* "All Networks": mind_map_fill icon — node 22283:7879, fill=#F9F9FA */
+                              <MindMapFillIcon size={16} className="text-[#f9f9fa]" />
+                            )}
+                          </span>
 
-                        {/* Label */}
-                        <span className="flex-1 text-left text-14 font-medium">{net.label}</span>
+                          {/* Label: 14px/w500/#f9f9fa, flex-1 */}
+                          <span className="flex-1 text-left">
+                            {net.label}
+                          </span>
 
-                        {/* Trailing check — Figma: #5bd197 stroke when active */}
-                        <span className="w-4 h-4 shrink-0 flex items-center justify-center">
-                          {isActive && (
-                            <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
-                              <path d="M1 5L4.5 8.5L11 1" stroke="#5BD197" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          )}
-                        </span>
-                      </button>
-                    )
-                  })}
+                          {/* Trailing check_fill: 20×20 slot, fill=#5BD197, visible only when selected */}
+                          <span className="w-5 h-5 shrink-0 flex items-center justify-center p-0.5">
+                            {isActive && (
+                              /* check_fill — Figma node 22283:7535, fill=#5BD197 */
+                              <svg width="16" height="16" viewBox="0 0 20 15" fill="#5BD197" aria-hidden="true">
+                                <path d="M19.5499 0.43968C19.8311 0.720971 19.9891 1.10243 19.9891 1.50018C19.9891 1.89793 19.8311 2.27939 19.5499 2.56068L8.30693 13.8037C8.15835 13.9523 7.98196 14.0702 7.78781 14.1506C7.59367 14.231 7.38558 14.2724 7.17543 14.2724C6.96529 14.2724 6.7572 14.231 6.56305 14.1506C6.36891 14.0702 6.19251 13.9523 6.04393 13.8037L0.457932 8.21868C0.314667 8.08031 0.200394 7.91479 0.12178 7.73179C0.0431668 7.54878 0.00178736 7.35195 5.66349e-05 7.15278C-0.00167409 6.95361 0.0362786 6.75609 0.1117 6.57175C0.187121 6.3874 0.298501 6.21993 0.43934 6.07909C0.580179 5.93825 0.747657 5.82687 0.932001 5.75145C1.11635 5.67603 1.31387 5.63807 1.51303 5.6398C1.7122 5.64153 1.90903 5.68291 2.09204 5.76153C2.27505 5.84014 2.44056 5.95441 2.57893 6.09768L7.17493 10.6937L17.4279 0.43968C17.5672 0.30029 17.7326 0.189715 17.9147 0.114273C18.0967 0.0388304 18.2919 0 18.4889 0C18.686 0 18.8811 0.0388304 19.0632 0.114273C19.2452 0.189715 19.4106 0.30029 19.5499 0.43968Z" />
+                              </svg>
+                            )}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
               </div>
             )}
