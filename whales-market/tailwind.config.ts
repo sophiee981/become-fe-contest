@@ -252,6 +252,12 @@ const config: Config = {
           '0%':   { opacity: '0', transform: 'scale(0.96) translateY(8px)' },
           '100%': { opacity: '1', transform: 'scale(1)    translateY(0)'   },
         },
+        // New trade row: slide down from top + fade in
+        'trade-in': {
+          '0%':   { opacity: '0', transform: 'translateY(-100%)' },
+          '60%':  { opacity: '1' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
       },
       animation: {
         shimmer:       'shimmer 2s infinite linear',
@@ -262,6 +268,7 @@ const config: Config = {
         'dropdown-in': 'dropdown-in 0.14s cubic-bezier(0.16, 1, 0.3, 1)',
         'backdrop-in': 'backdrop-in 0.2s ease-out',
         'modal-in':    'modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+        'trade-in':    'trade-in 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
       },
     },
   },

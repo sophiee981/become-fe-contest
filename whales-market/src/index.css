@@ -55,3 +55,35 @@
     -moz-appearance: textfield;
   }
 }
+
+/* ─── Page transition animations ──────────────────────────────────────────── */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pageExit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+.page-enter {
+  animation: pageEnter 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.page-exit {
+  animation: pageExit 180ms cubic-bezier(0.55, 0, 1, 0.45) both;
+  pointer-events: none;
+}

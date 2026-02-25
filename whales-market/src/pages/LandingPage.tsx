@@ -220,23 +220,23 @@ const UpcomingSection: React.FC = () => (
 
 // ─── 2. Top Metrics ───────────────────────────────────────────────────────────
 
-// Pre-market line chart — SVG with draw animation on mount
-// Grid lines removed per Figma — only line + subtle area gradient
-const VOL_PTS = [28, 40, 34, 52, 38, 58, 48, 68, 55, 72, 62, 80]
+// Pre-market line chart — accepts live pts[], initial draw animation on mount
+const INIT_VOL_PTS = [28, 40, 34, 52, 38, 58, 48, 68, 55, 72, 62, 80]
 
-const PremarketChart: React.FC = () => {
+const PremarketChart: React.FC<{ pts: number[] }> = ({ pts }) => {
   const lineRef = useRef<SVGPathElement>(null)
   const [pathLen, setPathLen] = useState(0)
   const [animated, setAnimated] = useState(false)
 
   const W = 284, H = 48
-  const pts = VOL_PTS.map((v, i) => ({
-    x: (i / (VOL_PTS.length - 1)) * W,
+  const coords = pts.map((v, i) => ({
+    x: (i / (pts.length - 1)) * W,
     y: H - (v / 100) * H,
   }))
-  const linePath = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ')
+  const linePath = coords.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ')
   const areaPath = linePath + ` L ${W} ${H} L 0 ${H} Z`
 
+  // Initial draw animation on mount
   useEffect(() => {
     if (lineRef.current) {
       const len = lineRef.current.getTotalLength()
@@ -250,19 +250,18 @@ const PremarketChart: React.FC = () => {
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block', overflow: 'visible' }}>
       <defs>
-        {/* Figma: area gradient subtle — stopOpacity 0.12 at top, 0 at bottom */}
         <linearGradient id="volAreaGrad" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%"   stopColor="#16C284" stopOpacity="0.12" />
           <stop offset="100%" stopColor="#16C284" stopOpacity="0"    />
         </linearGradient>
       </defs>
-      {/* Area fill — fades in after line draws */}
+      {/* Area fill */}
       <path
         d={areaPath}
         fill="url(#volAreaGrad)"
         style={{ opacity: animated ? 1 : 0, transition: 'opacity 0.5s ease 0.7s' }}
       />
-      {/* Line — animates left → right on mount */}
+      {/* Line — draw animation on mount, then smooth updates via CSS transition on d */}
       <path
         ref={lineRef}
         d={linePath}
@@ -274,7 +273,7 @@ const PremarketChart: React.FC = () => {
         style={{
           strokeDasharray: dash,
           strokeDashoffset: animated ? 0 : dash,
-          transition: pathLen ? 'stroke-dashoffset 0.9s ease' : 'none',
+          transition: pathLen ? 'stroke-dashoffset 0.9s ease, d 0.6s ease' : 'none',
         }}
       />
     </svg>
@@ -330,6 +329,25 @@ const TopMetrics: React.FC = () => {
   const [hrs,  setHrs]  = useState(2)
   const [days, setDays] = useState(0)
 
+  // ── Realtime pre-market vol (chart + value + change) ─────────────────────
+  const [volPts,    setVolPts]    = useState<number[]>(INIT_VOL_PTS)
+  const [volValue,  setVolValue]  = useState(4.20)   // millions
+  const [volChange, setVolChange] = useState(12.5)   // percent
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setVolPts(prev => {
+        const last  = prev[prev.length - 1]
+        const delta = (Math.random() - 0.42) * 9       // slight upward bias
+        const next  = Math.max(4, Math.min(97, last + delta))
+        return [...prev.slice(1), parseFloat(next.toFixed(1))]
+      })
+      setVolValue(v  => parseFloat(Math.max(3.5, v + (Math.random() - 0.4) * 0.06).toFixed(2)))
+      setVolChange(c => parseFloat((c + (Math.random() - 0.45) * 0.4).toFixed(1)))
+    }, 2000)
+    return () => clearInterval(t)
+  }, [])
+
   useEffect(() => {
     const t = setInterval(() => {
       setSecs(s => {
@@ -354,16 +372,17 @@ const TopMetrics: React.FC = () => {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 mt-4">
 
-      {/* ── Card 1: Pre-market 24h vol ── */}
+      {/* ── Card 1: Pre-market 24h vol — realtime ── */}
       <div className="bg-[rgba(255,255,255,0.03)] rounded-[10px] pt-4 pb-5 px-5 flex flex-col">
         <p className="text-12 font-medium text-[#7a7a83]">Pre-market 24h vol.</p>
         <div className="flex items-baseline gap-2 mt-2">
-          <span className="text-24 font-medium text-[#f9f9fa]">{METRICS.premarket24Vol.value}</span>
-          <ChangeTag value={12.5} size="sm" />
+          <span className="text-24 font-medium text-[#f9f9fa] tabular-nums transition-all duration-500">
+            ${volValue.toFixed(2)}M
+          </span>
+          <ChangeTag value={volChange} size="sm" />
         </div>
-        {/* mt-auto pushes chart to card bottom — aligns with other cards' bottom content */}
         <div className="mt-auto pt-3">
-          <PremarketChart />
+          <PremarketChart pts={volPts} />
         </div>
       </div>
 
@@ -554,7 +573,7 @@ const UpcomingTabContent: React.FC<{ loading: boolean }> = ({ loading }) => {
             sorted.map(listing => (
               <tr
                 key={listing.id}
-                onClick={() => navigate(`/market/${listing.id}`)}
+                onClick={() => navigate(`/market-v2/${listing.id}`)}
                 className="border-b border-border-subtle hover:bg-white/[0.02] transition-colors cursor-pointer group"
               >
                 {/* ── Token cell — logo(44×44) + chain badge(16×16) + name stack ── */}
@@ -737,7 +756,7 @@ const EndedTabContent: React.FC<{ loading: boolean }> = ({ loading }) => {
             sorted.map(market => (
               <tr
                 key={market.id}
-                onClick={() => navigate(`/market/${market.id}`)}
+                onClick={() => navigate(`/market-v2/${market.id}`)}
                 className="border-b border-border-subtle hover:bg-white/[0.02] transition-colors cursor-pointer group"
               >
                 {/* ── Token — 44×44 image slot + chain badge + name stack ── */}
@@ -1055,7 +1074,7 @@ const LiveMarketTable: React.FC = () => {
             {markets.map(market => (
               <tr
                 key={market.id}
-                onClick={() => navigate(`/market/${market.id}`)}
+                onClick={() => navigate(`/market-v2/${market.id}`)}
                 // Figma: row border-bottom #1B1B1C (border-border-subtle), hover subtle lift
                 className="border-b border-border-subtle hover:bg-white/[0.02] transition-colors cursor-pointer group"
               >
@@ -1316,7 +1335,7 @@ const AnimalIcon: React.FC<{ animal: 'shark' | 'whale' | 'shrimp'; size?: number
   return <SharkIcon size={size} />
 }
 
-const RecentTradesTable: React.FC = () => (
+const RecentTradesTable: React.FC<{ trades: HomeRecentTrade[]; newId: string | null }> = ({ trades, newId }) => (
   // Figma: recent-trades-update — VERTICAL layout, py=16px (py-4), gap=16px (gap-4)
   <div className="py-4 flex flex-col gap-4">
 
@@ -1327,7 +1346,7 @@ const RecentTradesTable: React.FC = () => (
       {/* "Recent Trades" 20px/500/#F9F9FA + green badge */}
       <span className="flex items-center gap-2 text-[20px] font-[500] leading-[28px] text-[#f9f9fa]">
         Recent Trades
-        <TabBadge count={mockHomeRecentTrades.length} active={true} />
+        <TabBadge count={trades.length} active={true} />
       </span>
     </div>
 
@@ -1369,10 +1388,13 @@ const RecentTradesTable: React.FC = () => (
             Row: px=8, py=16 per cell, border-bottom #1B1B1C
         ─────────────────────────────────────────────────────────────────── */}
         <tbody>
-          {mockHomeRecentTrades.map((trade: HomeRecentTrade) => (
+          {trades.map((trade: HomeRecentTrade) => (
             <tr
               key={trade.id}
-              className="border-b border-[#1b1b1c] hover:bg-[rgba(255,255,255,0.02)] transition-colors h-[60px]"
+              className={clsx(
+                'border-b border-[#1b1b1c] hover:bg-[rgba(255,255,255,0.02)] transition-colors h-[60px]',
+                trade.id === newId && 'animate-trade-in',
+              )}
             >
 
               {/* ── Col 0: Time — 14px/400/#7A7A83 ── */}
@@ -1573,15 +1595,85 @@ const BottomStats: React.FC = () => (
   </div>
 )
 
+// ─── Live trade generator ─────────────────────────────────────────────────────
+
+const LIVE_PAIRS: Array<{ pair: string; baseToken: string; price: number; collateralToken: 'USDC' | 'USDT' | 'SOL' }> = [
+  { pair: 'SKATE/USDC',  baseToken: 'SKATE', price: 0.0550, collateralToken: 'USDC' },
+  { pair: 'ERA/USDC',    baseToken: 'ERA',   price: 0.0464, collateralToken: 'USDC' },
+  { pair: 'GRASS/USDC',  baseToken: 'GRASS', price: 0.1100, collateralToken: 'USDC' },
+  { pair: 'LOUD/USDC',   baseToken: 'LOUD',  price: 0.9638, collateralToken: 'USDC' },
+  { pair: 'MMT/SOL',     baseToken: 'MMT',   price: 0.6500, collateralToken: 'SOL'  },
+  { pair: 'ZBT/USDT',    baseToken: 'ZBT',   price: 0.0842, collateralToken: 'USDT' },
+]
+const LIVE_ANIMALS: Array<'shark' | 'whale' | 'shrimp'> = ['shark', 'shark', 'shark', 'whale', 'shrimp']
+const TIME_LABELS = ['just now', '1s ago', '2s ago', '5s ago', '10s ago', '15s ago', '20s ago', '30s ago', '45s ago', '1m ago']
+
+let _tradeCounter = 100
+
+function makeLiveTrade(): HomeRecentTrade {
+  const p     = LIVE_PAIRS[Math.floor(Math.random() * LIVE_PAIRS.length)]
+  const side  = Math.random() > 0.48 ? 'buy' : 'sell'
+  const animal = LIVE_ANIMALS[Math.floor(Math.random() * LIVE_ANIMALS.length)]
+  const isRS  = Math.random() > 0.75
+  // Price varies ±5% from base
+  const price = parseFloat((p.price * (0.95 + Math.random() * 0.10)).toFixed(4))
+  // Amount: 1K–200K
+  const amtRaw = Math.floor(1000 + Math.random() * 199000)
+  const amount = amtRaw >= 1000 ? `${(amtRaw / 1000).toFixed(2)}K` : `${amtRaw}`
+  // Collateral: 10–2000
+  const collateralRaw = Math.floor(10 + Math.random() * 1990)
+  const collateral = collateralRaw >= 1000
+    ? `${(collateralRaw / 1000).toFixed(2)}K`
+    : `${collateralRaw}.00`
+  const id = `live-${++_tradeCounter}`
+  return {
+    id, timeAgo: 'just now',
+    side, isRS,
+    pair: p.pair, baseToken: p.baseToken,
+    price, amount, collateral, collateralToken: p.collateralToken, animal,
+    txId: `0x${Math.random().toString(16).slice(2, 8)}...`,
+  }
+}
+
+// Age labels: every tick shift "just now" rows forward
+function ageTradeList(trades: HomeRecentTrade[]): HomeRecentTrade[] {
+  return trades.map((t, i) => ({
+    ...t,
+    timeAgo: TIME_LABELS[Math.min(i, TIME_LABELS.length - 1)],
+  }))
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export const LandingPage: React.FC = () => (
-  <div className="py-4">
-    <PageWrapper>
-      <TopMetrics />
-      <LiveMarketTable />
-      <RecentTradesTable />
-      <BottomStats />
-    </PageWrapper>
-  </div>
-)
+export const LandingPage: React.FC = () => {
+  const [liveTradesRaw, setLiveTradesRaw] = useState<HomeRecentTrade[]>(
+    () => [...mockHomeRecentTrades],
+  )
+  const [newId, setNewId] = useState<string | null>(null)
+
+  // New trade every 2.5s
+  useEffect(() => {
+    const t = setInterval(() => {
+      const trade = makeLiveTrade()
+      setNewId(trade.id)
+      setLiveTradesRaw(prev => {
+        const aged = ageTradeList([trade, ...prev])
+        return aged.slice(0, 10)         // keep max 10 rows
+      })
+      // Clear new-row highlight after animation completes
+      setTimeout(() => setNewId(null), 400)
+    }, 2500)
+    return () => clearInterval(t)
+  }, [])
+
+  return (
+    <div className="py-4">
+      <PageWrapper>
+        <TopMetrics />
+        <LiveMarketTable />
+        <RecentTradesTable trades={liveTradesRaw} newId={newId} />
+        <BottomStats />
+      </PageWrapper>
+    </div>
+  )
+}

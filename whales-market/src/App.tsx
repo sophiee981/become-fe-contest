@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { BrowserRouter } from 'react-router-dom'
-import { Navbar }        from '@/components/layout/Navbar'
-import { ToastProvider } from '@/components/ui/Toast'
-import { AppRouter }     from '@/router'
+import { Navbar }          from '@/components/layout/Navbar'
+import { ToastProvider }   from '@/components/ui/Toast'
+import { PageTransition }  from '@/components/ui/PageTransition'
+import { AppRouter }       from '@/router'
 
 export const App: React.FC = () => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
@@ -17,7 +18,9 @@ export const App: React.FC = () => {
             onDisconnect={() => setWalletAddress(null)}
           />
           <main className="flex-1">
-            <AppRouter />
+            <PageTransition>
+              <AppRouter />
+            </PageTransition>
           </main>
         </div>
       </ToastProvider>

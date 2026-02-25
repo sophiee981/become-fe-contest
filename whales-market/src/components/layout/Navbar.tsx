@@ -88,8 +88,8 @@ interface NavLink {
 }
 
 const NAV_LINKS: NavLink[] = [
-  { label: 'Pre-market', href: '/',          activePaths: ['/', '/market', '/listing'] },
-  { label: 'Dashboard',  href: '/portfolio', activePaths: ['/portfolio'] },
+  { label: 'Pre-market', href: '/',          activePaths: ['/', '/market', '/market-v2', '/listing'] },
+  { label: 'Dashboard',  href: '/dashboard', activePaths: ['/dashboard'] },
   { label: 'Earn',       href: '/points',    activePaths: ['/points'],  hasDropdown: true },
   { label: 'About',      href: '#',          activePaths: ['/about'],   hasDropdown: false },
 ]
@@ -106,7 +106,7 @@ interface AvatarNavItem {
 }
 
 const AVATAR_NAV_ITEMS: AvatarNavItem[] = [
-  { id: 'dashboard',  label: 'Dashboard',  href: '/portfolio', Icon: BillFillIcon   },
+  { id: 'dashboard',  label: 'Dashboard',  href: '/dashboard', Icon: BillFillIcon   },
   { id: 'staking',    label: 'Staking',    href: '/staking',   Icon: PigMoneyFillIcon },
   { id: 'incentives', label: 'Incentives', href: '/points',    Icon: ExitLineIcon   },
   { id: 'referral',   label: 'Referral',   href: '/referral',  Icon: UserAdd2FillIcon },
