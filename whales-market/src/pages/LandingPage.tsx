@@ -16,12 +16,18 @@ import tokenGrassImg   from '@/assets/images/token-grass.png'
 import tokenLoudImg    from '@/assets/images/token-loud.png'
 import tokenMmtImg     from '@/assets/images/token-mmt.png'
 import tokenZbtImg     from '@/assets/images/token-zbt.png'
+import tokenTiaImg     from '@/assets/images/token-tia.png'
+import tokenStrkImg    from '@/assets/images/token-strk.png'
+import tokenOpImg      from '@/assets/images/token-op.png'
+import tokenArbImg     from '@/assets/images/token-arb.png'
+import tokenRenderImg  from '@/assets/images/token-render.png'
 import investor1Img    from '@/assets/images/investor1.png'
 import investor2Img    from '@/assets/images/investor2.png'
 import investor3Img    from '@/assets/images/investor3.png'
 import investor4Img    from '@/assets/images/investor4.png'
 import investor5Img    from '@/assets/images/investor5.png'
 import { clsx } from 'clsx'
+import { MODAL_SHADOW } from '@/constants/ui'
 import { PageWrapper } from '@/components/layout/PageWrapper'
 import {
   mockHomeMarkets, mockHomeRecentTrades, mockUpcomingListings, mockEndedMarkets,
@@ -76,12 +82,17 @@ const CHAIN_BG_CLASS: Record<HomeMarket['network'], string> = {
 
 // Token logo images — keyed by ticker symbol
 const TOKEN_LOGOS: Record<string, string> = {
-  SKATE: tokenSkateImg,
-  ERA:   tokenEraImg,
-  GRASS: tokenGrassImg,
-  LOUD:  tokenLoudImg,
-  MMT:   tokenMmtImg,
-  ZBT:   tokenZbtImg,
+  SKATE:  tokenSkateImg,
+  ERA:    tokenEraImg,
+  GRASS:  tokenGrassImg,
+  LOUD:   tokenLoudImg,
+  MMT:    tokenMmtImg,
+  ZBT:    tokenZbtImg,
+  TIA:    tokenTiaImg,
+  STRK:   tokenStrkImg,
+  OP:     tokenOpImg,
+  ARB:    tokenArbImg,
+  RENDER: tokenRenderImg,
 }
 
 // Investor avatar images — cycle through for Upcoming tab Investors & Backers column
@@ -113,10 +124,11 @@ const getUTCTimeStr = (iso: string): string => {
 
 // ─── Tab Badge ────────────────────────────────────────────────────────────────
 
+// Figma: whales-badge — h=20px | px=8px py=4px | r=9999 | 10px/500/lh-12px
 const TabBadge: React.FC<{ count: number; active: boolean }> = ({ count, active }) => (
   <span className={clsx(
-    'inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-10 font-semibold tabular-nums leading-none',
-    active ? 'bg-[#16c284] text-white' : 'bg-[#1b1b1c] text-[#b4b4ba]',
+    'inline-flex items-center justify-center px-2 py-1 rounded-full text-[10px] font-medium tabular-nums leading-[12px]',
+    active ? 'bg-[#16c284] text-[#f9f9fa]' : 'bg-[#252527] text-[#b4b4ba]',
   )}>
     {count}
   </span>
@@ -935,8 +947,8 @@ const LiveMarketTable: React.FC = () => {
             ─────────────────────────────────────────────────────────────── */}
             {netOpen && (
               <div
-                className="absolute right-0 top-[calc(100%+6px)] z-50 w-48 bg-[#1b1b1c] rounded-[10px] animate-dropdown-in"
-                style={{ boxShadow: '0 0 32px rgba(0,0,0,0.20)' }}
+                className="absolute right-0 top-[calc(100%+6px)] z-50 w-48 bg-[#1b1b1c] rounded-[10px] overflow-hidden animate-dropdown-in"
+                style={{ boxShadow: MODAL_SHADOW }}
               >
                 {/* Inner group: p=8px all, gap=4px (gap-1) */}
                 <div className="p-2 flex flex-col gap-1">
@@ -958,7 +970,7 @@ const LiveMarketTable: React.FC = () => {
                           key={net.id}
                           onClick={() => { setNetwork(net.id); setNetOpen(false) }}
                           className={clsx(
-                            'w-full flex items-center gap-2 px-2 py-1.5 rounded-lg',
+                            'w-full box-border flex items-center gap-2 px-2 py-1.5 rounded-lg',
                             'text-[14px] font-[500] leading-[20px] transition-colors duration-150',
                             isActive
                               ? 'bg-[#252527] text-[#f9f9fa]'
