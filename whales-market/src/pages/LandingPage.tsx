@@ -919,19 +919,19 @@ const RecentTradesTable: React.FC = () => (
 
     {/* ── Table (open-offers-list) ───────────────────────────────────────────
         Figma: 1344×684 | table-heading(36) + recent-trade-list(600, 10×60px rows)
-        Column widths: Time(128) Side(128) Pair(304) Price(192) Amount(192) Collateral(192) Tx.ID(192)
+        Column ratios from Figma: Time(128) Side(128) Pair(304) Price(192) Amount(192) Collateral(192) Tx.ID(192)
+        Total=1328 → converted to % so table always fits container with no horizontal scroll
     ───────────────────────────────────────────────────────────────────────── */}
-    <div className="overflow-x-auto">
-      <table className="w-full table-fixed" style={{ minWidth: 1328 }}>
-        <colgroup>
-          <col style={{ width: 128 }} />   {/* Time */}
-          <col style={{ width: 128 }} />   {/* Side */}
-          <col style={{ width: 304 }} />   {/* Pair */}
-          <col style={{ width: 192 }} />   {/* Price ($) */}
-          <col style={{ width: 192 }} />   {/* Amount */}
-          <col style={{ width: 192 }} />   {/* Collateral */}
-          <col style={{ width: 192 }} />   {/* Tx.ID */}
-        </colgroup>
+    <table className="w-full table-fixed">
+      <colgroup>
+        <col style={{ width: '9.64%' }}  />  {/* Time      128/1328 */}
+        <col style={{ width: '9.64%' }}  />  {/* Side      128/1328 */}
+        <col style={{ width: '22.89%' }} />  {/* Pair      304/1328 */}
+        <col style={{ width: '14.46%' }} />  {/* Price ($) 192/1328 */}
+        <col style={{ width: '14.46%' }} />  {/* Amount    192/1328 */}
+        <col style={{ width: '14.46%' }} />  {/* Collateral 192/1328 */}
+        <col style={{ width: '14.46%' }} />  {/* Tx.ID     192/1328 */}
+      </colgroup>
 
         {/* ── Table heading — Figma: 1344×36 | px=8 | border-bottom #1B1B1C ── */}
         <thead>
@@ -1068,8 +1068,7 @@ const RecentTradesTable: React.FC = () => (
             </tr>
           ))}
         </tbody>
-      </table>
-    </div>
+    </table>
   </div>
 )
 
