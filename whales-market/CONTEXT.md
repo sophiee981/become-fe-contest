@@ -1,7 +1,7 @@
 # CONTEXT.md — Whales Market Session Handoff
 
 > File for AI session continuity. Read this **before** touching any code.
-> Last updated: **2026-02-25** (session 2: MarketDetailV2 layout frame)
+> Last updated: **2026-02-26** (session 3: WalletModal rewrite, tab badges, Recent Trades icons, MyDashboard page)
 
 ---
 
@@ -19,7 +19,7 @@ This is a **frontend-only** project (no backend) — all data comes from typed m
 | Router | React Router DOM v7 |
 | Icons | lucide-react + hand-crafted SVG icons from Figma |
 | Font | Inter Variable (via `@fontsource-variable/inter`) |
-| Dev command | `npm run dev` |
+| Dev command | `npm run dev` → binds to `http://127.0.0.1:5173` |
 
 ---
 
@@ -28,7 +28,6 @@ This is a **frontend-only** project (no backend) — all data comes from typed m
 ```
 7c0cacb  Add files via upload
 1a4e3c4  Day 1 - add CLAUDE.md and spec.md
-0e0bc00  Merge branch 'main'
 b96b7ef  Day 1 - project setup and design tokens
 465b55b  Day 2 - Landing page, Navbar, design tokens, TopMetrics
 da2bc93  Day 2 - Live Market table, network dropdown, avatar dropdown
@@ -45,7 +44,16 @@ c386e8e  Rebuild BottomStats (Figma 42532:726513)
 c25339a  Update sort icon to Figma specs, rebuild Upcoming tab as table
 74fde4f  Add Ended tab with 8 ended markets table, sort, skeleton loading
 f242f1a  Fix Ended tab columns per Figma node 42540-728736
+2b01478  Remove Collateral Token column from Ended tab
 7c792ef  Add MarketDetailV2Page with route /market-v2/:id
+2105485  Update CONTEXT.md with MarketDetailV2Page docs
+533c539  Rewrite Connect Wallet modal per Figma node 38214-314593
+e5e9da9  Remove back button from WalletModal header, keep only close button
+161bfc0  Fix tab badges per Figma + update Ended tab mock data with real token images
+6055c87  Recent Trades: remove amount token icon, add USDC/USDT + animal icons to collateral col
+0fce26d  Market Detail V2 — market header pixel-perfect per Figma
+2cc31c2  Add MyDashboard page and mock data
+be1feec  Fix: bind Vite dev server to 127.0.0.1 to resolve connection refused
 ```
 
 ---
@@ -63,62 +71,80 @@ src/
 │   ├── chain-solana.png
 │   ├── chain-bnb.png
 │   ├── chain-monad.png         # Used as Hyperliquid logo
-│   ├── token-skate.png         # Token logos
+│   ├── token-skate.png         # Token logos (Live Market)
 │   ├── token-era.png
 │   ├── token-grass.png
 │   ├── token-loud.png
 │   ├── token-mmt.png
 │   ├── token-zbt.png
-│   ├── skate-logo.png          # Secondary SKATE logo
+│   ├── token-tia.png           # Token logos (Ended tab)
+│   ├── token-strk.png
+│   ├── token-op.png
+│   ├── token-arb.png
+│   ├── token-render.png
+│   ├── usdc-icon.png           # USDC logo (collateral col in Recent Trades)
+│   ├── skate-logo.png
 │   ├── solana-logo.png
-│   ├── usdc-icon.png
-│   └── fee-icon.png
+│   ├── fee-icon.png
+│   ├── investor1-5.png         # Investor avatar images (Upcoming tab backers col)
+│   ├── logo-phantom.png        # Wallet logos (WalletModal)
+│   ├── logo-solflare.png
+│   ├── logo-aptos.png
+│   ├── logo-evm.png
+│   ├── logo-solana.png
+│   ├── logo-starknet.png
+│   ├── logo-sui.png
+│   └── logo-ton.png
 ├── components/
 │   ├── layout/
-│   │   ├── Navbar.tsx          # (566 lines) Sticky nav, wallet btn, avatar dropdown
-│   │   ├── Footer.tsx          # (71 lines) Footer links
-│   │   ├── PageWrapper.tsx     # (12 lines) max-w-[1280px] mx-auto wrapper
-│   │   └── WalletModal.tsx     # (388 lines) Connect wallet modal (MetaMask/Phantom/WalletConnect mock)
+│   │   ├── Navbar.tsx          # Sticky nav, wallet btn, avatar dropdown
+│   │   ├── Footer.tsx
+│   │   ├── PageWrapper.tsx     # max-w-[1280px] mx-auto wrapper
+│   │   └── WalletModal.tsx     # Connect wallet modal — rewritten per Figma 38214:314593
 │   └── ui/
-│       ├── Button.tsx          # Variants: primary/secondary/ghost/danger/buy/sell
-│       ├── Badge.tsx           # Variants: success/danger/warning/info/neutral/buy/sell
-│       ├── Input.tsx           # Label + error + prefix/suffix + hint
-│       ├── Modal.tsx           # Backdrop blur, ESC close, overlay click close
-│       ├── Tabs.tsx            # Line/pill variants with count badges
+│       ├── Button.tsx
+│       ├── Badge.tsx
+│       ├── Input.tsx
+│       ├── Modal.tsx
+│       ├── Tabs.tsx
 │       ├── Toast.tsx           # ToastProvider context + useToast hook
-│       ├── Spinner.tsx         # Animated loading spinner
-│       ├── Skeleton.tsx        # Shimmer loading placeholder
-│       ├── EmptyState.tsx      # Empty list placeholder
+│       ├── Spinner.tsx
+│       ├── Skeleton.tsx
+│       ├── EmptyState.tsx
 │       └── icons/
-│           └── DownFillIcon.tsx # Custom chevron-down SVG
+│           └── DownFillIcon.tsx
 ├── pages/
-│   ├── LandingPage.tsx         # (1350 lines) ★ MAIN PAGE — details in Section 5
-│   ├── MarketListPage.tsx      # (210 lines) Market grid + search/filter
-│   ├── MarketDetailPage.tsx    # (583 lines) Anchor page: order book + trade form + confirm modal
-│   ├── PortfolioPage.tsx       # (228 lines) Stats cards + My Orders + Trade History tabs
-│   ├── CreateListingPage.tsx   # (462 lines) Create order form + validation + preview modal
-│   ├── ProfilePage.tsx         # (273 lines) User profile + editable username
-│   ├── MarketDetailV2Page.tsx   # ★ NEW — Market Detail V2 (Figma 37222:132664) layout frame
-│   ├── PointsPage.tsx          # (139 lines) Rewards stub
-│   └── NotFoundPage.tsx        # (25 lines) 404
+│   ├── LandingPage.tsx         # (1587 lines) ★ MAIN PAGE — details in Section 5
+│   ├── MarketListPage.tsx      # Market grid + search/filter
+│   ├── MarketDetailPage.tsx    # OLD Market Detail (order book + trade form + confirm modal)
+│   ├── MarketDetailV2Page.tsx  # (472 lines) ★ NEW Market Detail V2 — header pixel-perfect
+│   ├── MyDashboardPage.tsx     # (1011 lines) ★ NEW Dashboard page at /dashboard
+│   ├── PortfolioPage.tsx
+│   ├── CreateListingPage.tsx
+│   ├── ProfilePage.tsx
+│   ├── PointsPage.tsx          # Stub
+│   └── NotFoundPage.tsx
 ├── router/index.tsx            # Route definitions
 ├── mock-data/
 │   ├── homeData.ts             # Landing page data (markets, trades, upcoming, stats, metrics)
-│   ├── markets.ts              # 50+ market entries for MarketListPage
-│   ├── orderBook.ts            # Buy/sell order book entries
-│   ├── myOrders.ts             # User's active orders
-│   ├── recentTrades.ts         # Recent trade entries
-│   ├── tradeHistory.ts         # Full trade history with P&L
-│   ├── portfolio.ts            # Portfolio summary stats
-│   └── user.ts                 # Mock user profile + balances
+│   ├── dashboardData.ts        # (153 lines) NEW — dashboard page mock data
+│   ├── markets.ts
+│   ├── orderBook.ts
+│   ├── myOrders.ts
+│   ├── recentTrades.ts
+│   ├── tradeHistory.ts
+│   ├── portfolio.ts
+│   └── user.ts
+├── constants/
+│   └── ui.ts                   # MODAL_SHADOW = '0 0 32px rgba(0,0,0,0.2)'
 ├── types/
-│   ├── market.ts               # Market interface
-│   ├── order.ts                # OrderBookEntry, MyOrder, RecentTrade
-│   ├── user.ts                 # User interface
-│   ├── filter.ts               # MarketCategory, SortField, SortDirection, MarketFilter
-│   └── portfolio.ts            # PortfolioStats, TradeHistoryEntry
+│   ├── market.ts
+│   ├── order.ts
+│   ├── user.ts
+│   ├── filter.ts
+│   └── portfolio.ts
 ├── hooks/
-│   └── useToast.ts             # Toast notification state hook
+│   └── useToast.ts
 └── utils/                      # (empty — reserved)
 ```
 
@@ -128,127 +154,169 @@ src/
 
 | Route | Page | Status |
 |-------|------|--------|
-| `/` | LandingPage | ★ Most polished, 1350 lines |
+| `/` | LandingPage | ★ Most polished, 1587 lines |
 | `/market` | MarketListPage | Functional |
-| `/market/:id` | MarketDetailPage | Anchor page — order book + trade form |
+| `/market/:id` | MarketDetailPage (OLD) | Functional |
+| `/market-v2/:id` | MarketDetailV2Page | ★ Market header pixel-perfect, sections pending |
+| `/dashboard` | MyDashboardPage | ★ NEW — skeleton done, needs polish |
 | `/portfolio` | PortfolioPage | Functional |
 | `/create` | CreateListingPage | Functional |
 | `/profile` | ProfilePage | Functional |
-| `/market-v2/:id` | MarketDetailV2Page | ★ NEW — layout frame only, details pending |
 | `/points` | PointsPage | Stub |
 | `*` | NotFoundPage | Simple 404 |
 
 ---
 
-## 5. LandingPage.tsx — Deep Breakdown
-
-This is the largest and most complex file. It contains **everything inline** (no external feature components).
+## 5. LandingPage.tsx — Deep Breakdown (1587 lines)
 
 ### Section Architecture (top to bottom)
 
-| # | Component | Lines | Description |
-|---|-----------|-------|-------------|
-| 0 | Helpers | 1-55 | `fmtPrice()`, `fmtVol()`, `ChangeTag`, `getUTCTimeStr()` |
-| 1 | Token/Chain maps | 56-85 | `TOKEN_LOGOS`, `CHAIN_LOGOS`, `CHAIN_BG_CLASS` |
-| 2 | `NetworkBadge` | ~86-110 | 16x16 chain badge (absolute bottom-left of token logo) |
-| 3 | `TabBadge` | ~111-130 | Green active / dark inactive count badges |
-| 4 | `PremarketChart` | ~130-200 | SVG line chart with area gradient + draw animation |
-| 5 | `FearGreedGauge` | ~200-280 | Semicircle gauge (pink->orange->green arc + white dot) |
-| 6 | `TopMetrics` | ~280-420 | 4-card grid: Pre-market Vol, Fear & Greed, Altcoin Season, Next Settlement |
-| 7 | `UpcomingSection` | ~420-465 | Featured upcoming carousel (2-col grid, chevron nav) |
-| 8 | SVG Icons | ~430-470 | `Filter2FillIcon`, `MindMapFillIcon`, `TableSortIcon`, `SkeletonRow` |
-| 9 | `UpcomingTabContent` | 470-638 | **Upcoming tab table** (5 cols — see Section 6) |
-| 10 | `LiveMarketTable` | 640-995 | Tab bar (Live/Upcoming/Ended) + search + network filter + Live Market table |
-| 11 | Custom icons | 1001-1070 | `LeftFillIcon`, `RightFillIcon`, `ArrowRightUpFillIcon`, `TokenDot`, `SharkIcon` |
-| 12 | `RecentTradesTable` | 1071-1247 | 7-col trade table (Time, Side, Pair, Price, Amount, Collateral, Tx.ID) |
-| 13 | `BottomStats` | 1249-1337 | LIVE DATA + Total Vol + Vol 24h + links (Docs/Dune/Link3) + social icons |
-| 14 | `LandingPage` | 1339-1350 | Root: TopMetrics → LiveMarketTable → RecentTradesTable → BottomStats |
+| # | Component | Description |
+|---|-----------|-------------|
+| 0 | Helpers | `fmtPrice()`, `fmtVol()`, `ChangeTag`, `getUTCTimeStr()` |
+| 1 | Token/Chain maps | `TOKEN_LOGOS` (SKATE/ERA/GRASS/LOUD/MMT/ZBT + TIA/STRK/OP/ARB/RENDER), `CHAIN_LOGOS`, `CHAIN_BG_CLASS` |
+| 2 | `NetworkBadge` | 16x16 chain badge, absolute bottom-left of token logo |
+| 3 | `TabBadge` | **Fixed** per Figma: h=20px, px=8px, py=4px, 10px/500, active=#16C284, inactive=#252527 |
+| 4 | `PremarketChart` | SVG line chart with area gradient + draw animation |
+| 5 | `FearGreedGauge` | Semicircle gauge (pink→orange→green arc + white dot) |
+| 6 | `TopMetrics` | 4-card grid: Pre-market Vol, Fear & Greed, Altcoin Season, Next Settlement |
+| 7 | `UpcomingSection` | Featured upcoming carousel (hidden/unused) |
+| 8 | SVG Icons | `Filter2FillIcon`, `MindMapFillIcon`, `TableSortIcon`, `SkeletonRow` |
+| 9 | `UpcomingTabContent` | Upcoming tab table (5 cols) |
+| 10 | `LiveMarketTable` | Tab bar (Live/Upcoming/Ended) + search + network filter + table |
+| 11 | Animal + collateral icons | `SharkIcon`, `WhaleIcon`, `ShrimpIcon`, `UsdtIcon`, `CollateralTokenIcon`, `AnimalIcon`, `TokenDot`, `ArrowRightUpFillIcon` |
+| 12 | `RecentTradesTable` | 7-col trade table — **Amount col: text only; Collateral col: token image + animal icon** |
+| 13 | `BottomStats` | LIVE DATA + Total Vol + Vol 24h + links + social icons |
+| 14 | `LandingPage` | Root: TopMetrics → LiveMarketTable → RecentTradesTable → BottomStats |
 
-### TableSortIcon (Figma node 35281:21856)
+### Recent Trades — Current State (DONE ✅)
 
-Updated to exact Figma SVG. 16x16, two arrows (up y=3-7, down y=9-13):
-- Inactive: `#7A7A83`
-- Active: `#F9F9FA`
-- Props: `{ field: string; sortKey: string; sortDir: 'asc' | 'desc' }`
+**Amount column**: text only, no token icon.
 
-This same icon is **synced across**: LandingPage, MarketListPage, PointsPage.
+**Collateral column**: `[amount text] [CollateralTokenIcon] [AnimalIcon]`
+- `CollateralTokenIcon`: USDC → `usdc-icon.png` image, USDT → inline SVG `UsdtIcon` (#26A17B), others → `TokenDot`
+- `AnimalIcon`: shark → `SharkIcon` (#0A71CD blue + #0A0A0B eye), whale → `WhaleIcon` (#27C9D8 cyan), shrimp → `ShrimpIcon` (#FF8F3C orange)
 
-### LiveMarketTable tabs
-
-The `LiveMarketTable` component manages 3 tabs:
-- **Live Market** — shows `mockHomeMarkets` in a sortable table (6 cols: Token, Last Price, 24h Vol, Total Vol, Implied FDV, Settle Time)
-- **Upcoming** — renders `<UpcomingTabContent />` (separate component, 5-col table)
-- **Ended** — currently falls through to Live Market table (not separately implemented)
-
-Tab switch triggers 600ms loading skeleton.
-
-### Network Filter Dropdown (Figma 38214:311363)
-
-5 options: All Networks, Solana, Ethereum, Hyperliquid, BNB Chain.
-Custom dropdown with chain logos + check icon when selected.
-Only visible on Live Market tab.
-
----
-
-## 6. Upcoming Tab — Current State & Pending Work
-
-### Table Structure (Figma node 42540-727391)
-
-| Col | Width | Sortable | Content |
-|-----|-------|----------|---------|
-| Token | 42% | No | Logo (44x44) + NetworkBadge + ticker + name + optional NEW MARKET badge |
-| Watchers | 14% | Yes | Formatted number |
-| Investors & Backers | 15% | No | Avatar stack (20x20, -6px overlap) + overflow badge |
-| Narrative | 14% | No | Pill badges (bg-[#1b1b1c], text 10px) |
-| Moni Score | 15% | Yes | Progress bar (120x4px) + white dot + numeric score |
-
-### Mock Data (`mockUpcomingListings` in homeData.ts)
-
-6 entries: SKATE/SKATEON, SKATE/Skate Chain, ERA/Caldera, GRASS/Grass, LOUD/Loud, MMT/Momentum.
-
-Interface:
+**HomeRecentTrade interface** (in homeData.ts):
 ```ts
-export interface UpcomingListing {
-  id: string; token: string; tokenName: string; logo: string;
-  network: 'ethereum' | 'solana' | 'base' | 'bnb' | 'sui';
-  isNew?: boolean; status: 'soon' | 'countdown';
-  listingTime: string | null;
-  countdown?: { days: string; hours: string; minutes: string };
-  watchers: number;
-  investorAvatars: string[];   // currently placeholder letters ['A','B','C','D','E']
-  investorOverflow: number;    // "+24" badge count
-  narratives: string[];        // e.g. ['gamefi', 'NFT']
-  narrativeOverflow: number;   // "+N" overflow count
-  moniScore: number;           // numeric score, e.g. 10844
-  moniPct: number;             // 0-100 bar fill percentage
+export interface HomeRecentTrade {
+  id: string; timeAgo: string; side: 'buy' | 'sell'; isRS: boolean;
+  pair: string; baseToken: string; price: number;
+  amount: string; collateral: string;
+  collateralToken: 'USDC' | 'USDT' | 'SOL';
+  animal: 'shark' | 'whale' | 'shrimp';
+  txId: string;
 }
 ```
 
-### PENDING WORK (user's latest request, NOT YET STARTED)
+Animal assignments per Figma: rt-1=shark, rt-2=whale, rt-3→rt-8=shark, rt-9→rt-10=shrimp.
 
-1. **Fix Moni Score** to match exact Figma component design
-   - Current: 120px x 4px green bar + white dot + number
-   - Need to verify against Figma screenshots and adjust
+**⚠️ PENDING**: SVG path shapes for animal icons are approximations (hand-crafted). Reference screenshots of exact Figma shapes saved at `/tmp/figma_icons_scaled.png`. Colors are confirmed correct: shark=#0A71CD, whale=#27C9D8, shrimp=#FF8F3C.
 
-2. **Add investor avatar images** — 5 images uploaded by user:
-   - `/Users/sophie/Downloads/investor1.png`
-   - `/Users/sophie/Downloads/invest2.png`
-   - `/Users/sophie/Downloads/invest3.png`
-   - `/Users/sophie/Downloads/invest4.png`
-   - `/Users/sophie/Downloads/invest5.png`
-   - Need to: copy to `src/assets/images/`, import, use in `investorAvatars` mock data
-   - Current investor avatars are **gradient placeholder circles**, not real images
+### Ended Tab — Current State (DONE ✅)
 
-3. **Update mock data** to match the Figma design exactly (values, token names, scores, etc.)
+4 items only (for demo): TIA (Celestia), STRK (Starknet), OP (Optimism), ARB (Arbitrum).
+All with real token images from `src/assets/images/`.
 
-Figma reference for this section: `node-id=42540-727391`
-URL: `https://www.figma.com/design/mrTOtq806N1EFg8NOnsj99/WhalesMarket-v2--Sophie-code-?node-id=42540-727391`
+### Tab Badges — Fixed ✅
+
+```tsx
+// Figma: h=20px | px=8px py=4px | r=9999 | 10px/500/lh-12px
+active: bg-[#16c284] text-[#f9f9fa]
+inactive: bg-[#252527] text-[#b4b4ba]
+```
+
+### LiveMarketTable tabs
+
+- **Live Market** — `mockHomeMarkets` (6 items), sortable, network filter dropdown
+- **Upcoming** — `<UpcomingTabContent />` (5-col table)
+- **Ended** — `mockEndedMarkets` (4 items, TIA/STRK/OP/ARB)
 
 ---
 
-## 7. Design System (tailwind.config.ts — 272 lines)
+## 6. Upcoming Tab — Current State
 
-### Color Tokens (key ones)
+### Table Structure (Figma node 42540-727391)
+
+| Col | Width | Content |
+|-----|-------|---------|
+| Token | 42% | Logo (44x44) + NetworkBadge + ticker + name + NEW MARKET badge |
+| Watchers | 14% | Formatted number |
+| Investors & Backers | 15% | Avatar stack (20x20, -6px overlap) + overflow badge |
+| Narrative | 14% | Pill badges |
+| Moni Score | 15% | Progress bar (120x4px) + white dot + numeric score |
+
+### Investor Avatar Images ✅
+
+Images are now in `src/assets/images/investor1.png` through `investor5.png`.
+**Status**: images are in the project but may not yet be wired into `mockUpcomingListings` — verify in code.
+
+### PENDING WORK
+
+1. **Wire investor avatar images** into `mockUpcomingListings` in `homeData.ts`
+2. **Fix Moni Score** to match exact Figma component (node 42540-727391)
+3. **Update mock data** values to match Figma exactly
+
+---
+
+## 7. WalletModal — Rewritten ✅ (Figma 38214:314593)
+
+Flow:
+1. Navbar "Connect Wallet" → open modal (no back button, only X close)
+2. Select network tab (Solana default, also Ethereum + 4 others)
+3. Choose wallet (Backpack, Phantom, Solflare, etc. — real logos from assets)
+4. 1000ms loading → "Connected: 0x1a2b...9a0b"
+5. Navbar shows truncated address + avatar
+6. Click avatar → dropdown: Copy address, View on explorer, Disconnect
+
+---
+
+## 8. MarketDetailV2Page — `/market-v2/:id` (472 lines)
+
+### Layout Frame
+
+Body container: `max-w-[1440px]` centered, inner `px-4` = 1376px content area.
+
+### Section Status
+
+| Section | Status |
+|---------|--------|
+| Breadcrumb | ✅ Built — Whales.Market > Pre-market > SKATE + "Delivery Scenarios" link |
+| Market Header | ✅ Pixel-perfect — token info (SKATE, $0.0045, stats) + buttons |
+| Left Column frame | ✅ Frame — placeholder blocks |
+| Right Column frame | ✅ Frame — placeholder blocks |
+| Bottom Stats | ✅ Built |
+
+### Market Header Details
+
+**Left — token-info:** Logo + chain badge + "SKATE" (18/500) + "Skate Chain" (12/400/#7A7A83) + price + change + stats (24h Vol, Total Vol, Countdown pill)
+
+**Right — buttons:** "About Skate" dropdown | "Airdrop Checker" | "Earn 50% Fee" | More icon | Divider | "Create Order" (bg #000)
+
+### PENDING WORK — Sections to Build (in order)
+
+1. **Chart section** (Figma 37315:161696) — 928x424
+2. **Order Book table** (Figma 37315:161694) — 928x742
+3. **Recent Trades table** (Figma 37315:189288) — 928x532
+4. **Trade Panel** (Figma 37692:254729) — 384x456, Buy/Sell form
+5. **Price Chart** (Figma 37222:132675) — 384x336
+6. **My Orders** (Figma 37225:131293) — 384x608, Filled/Open tabs
+7. **Mock data** — order book, trades, user orders
+
+---
+
+## 9. MyDashboardPage — `/dashboard` (1011 lines) ★ NEW
+
+New page added at `/dashboard`. Contains:
+- Mock data in `src/mock-data/dashboardData.ts` (153 lines)
+- Full page skeleton/structure added
+- Needs design review against Figma
+
+---
+
+## 10. Design System (tailwind.config.ts)
+
+### Color Tokens
 
 | Token | Hex | Usage |
 |-------|-----|-------|
@@ -260,270 +328,118 @@ URL: `https://www.figma.com/design/mrTOtq806N1EFg8NOnsj99/WhalesMarket-v2--Sophi
 | `success` | `#5BD197` | Buy/positive/green text |
 | `danger` | `#FD5E67` | Sell/negative/red text |
 | `warning` | `#FB923C` | In-progress/orange |
-| `info` | `#60A5FA` | Info/blue |
-| `text-primary` | `#F9F9FA` | Main text (white) |
+| `text-primary` | `#F9F9FA` | Main text |
 | `text-secondary` | `#B4B4BA` | Secondary text |
 | `text-muted` | `#7A7A83` | Muted/tertiary text |
 | `border-subtle` | `#1B1B1C` | Table row borders |
 | `border-default` | `#2E2E34` | Default borders |
 
-### Font Size Scale
+### Shared Constants (`src/constants/ui.ts`)
 
-`text-10` through `text-48`, each with explicit lineHeight. Most used: `text-12` (labels), `text-14` (body/table cells), `text-20` (headings).
-
-### Animations
-
-`shimmer`, `slide-in/out`, `fade-in`, `scale-in`, `dropdown-in`, `backdrop-in`, `modal-in` — all with custom keyframes and timing.
+```ts
+export const MODAL_SHADOW = '0 0 32px rgba(0,0,0,0.2)'
+```
 
 ---
 
-## 8. Key Inline Components (in LandingPage.tsx)
-
-These are NOT in `src/components/` — they are defined inline at the top of LandingPage.tsx:
-
-| Component | Description |
-|-----------|-------------|
-| `TOKEN_LOGOS` | `Record<string, string>` mapping ticker → imported image (SKATE, ERA, GRASS, LOUD, MMT, ZBT) |
-| `CHAIN_LOGOS` | `Partial<Record<network, string>>` — chain badge images (ethereum, solana, bnb) |
-| `CHAIN_BG_CLASS` | `Record<network, string>` — fallback bg colors for chains without logos (incl. `sui: 'bg-[#4DA2FF]'`) |
-| `NetworkBadge` | 16x16 rounded chain indicator, absolute-positioned bottom-left of token logo |
-| `ChangeTag` | Colored percentage change display (+green/-red) |
-| `TokenDot` | Colored circle with first letter, used when no real token image exists |
-| `SharkIcon` | Custom shark SVG icon for collateral column |
-| `TableSortIcon` | Sort direction indicator (up/down arrows), synced to Figma node 35281:21856 |
-| `TabBadge` | Active (green bg) / inactive (dark bg) counter badge |
-
----
-
-## 9. Key Patterns & Conventions
+## 11. Key Patterns & Conventions
 
 ### Imports
-- Always use `@/` alias (configured in vite.config.ts + tsconfig.json)
-- Never relative paths like `../../../`
+- Always use `@/` alias (vite.config.ts + tsconfig.json)
 
 ### Image assets
 - Token logos: `import tokenXxxImg from '@/assets/images/token-xxx.png'`
-- Chain logos: `import chainXxxImg from '@/assets/images/chain-xxx.png'`
-- Referenced via `TOKEN_LOGOS` / `CHAIN_LOGOS` maps
+- Referenced via `TOKEN_LOGOS` / `CHAIN_LOGOS` maps in LandingPage.tsx
 
 ### Figma reference comments
-- Every section has Figma node ID comments: `// Figma node 42532:726450`
-- Specific measurements noted: `// 14px/500/#F9F9FA`
+- Every section has Figma node ID: `// Figma node 42532:726450`
 
 ### Table pattern
-- `table-fixed` with percentage-based `style={{ width }}` on `<th>` or `<colgroup>`
-- Left-aligned first column (Token), right-aligned data columns
+- `table-fixed` + percentage widths on `<th>` / `<colgroup>`
+- Left-aligned first column, right-aligned data columns
 - Rows: `border-b border-border-subtle hover:bg-white/[0.02] cursor-pointer`
-- Sort: `useState<SortKey>` + `useState<'asc'|'desc'>` + `useMemo` for sorted data
 
 ### No bare `/* */` comments inside JSX ternaries
-- Babel/Vite parser is stricter than TypeScript
-- Bare comments inside `? :` branches cause "Adjacent JSX elements" parse errors
-- Always wrap in `<>...</>` or put comments outside the ternary
+- Causes "Adjacent JSX elements" parse errors in Vite
+- Always wrap in `<>...</>` or move outside ternary
 
 ### Async simulation
-- All submit actions: `setTimeout(resolve, 800-1500ms)` + loading state
-- 10% random failure rate for realism
+- All submit actions: `setTimeout(resolve, 800–1500ms)` + loading state
+- 10% random failure rate
 
 ---
 
-## 10. WalletModal Flow (Figma 42670:317711)
+## 12. Known Technical Gotchas
 
-1. Navbar "Connect Wallet" button → opens modal
-2. Select network tab (Solana default, also Ethereum + 4 others)
-3. Choose wallet (Backpack, Phantom, Solflare, etc.)
-4. 1000ms loading simulation → "Connected: 0x1a2b...9a0b"
-5. Navbar shows truncated address + avatar
-6. Click avatar → dropdown: Copy address, View on explorer, Disconnect
+1. **Babel JSX parse errors** — bare comments inside ternary branches crash Vite.
 
----
+2. **Vite IPv6 binding** — macOS Node 18+ resolves `localhost` → `::1`. Fixed in `vite.config.ts` with `server: { host: '127.0.0.1', port: 5173 }`.
 
-## 11. MarketDetailV2Page — NEW (Figma node 37222:132664)
+3. **TableSortIcon type flexibility** — uses `string` props (not union) so it works across different sort key types without casting.
 
-This is a **new Market Detail page** built from Figma design for token SKATE. Currently contains **layout frame only** — placeholder sections ready to be filled with real components.
+4. **Preview tool viewport** — defaults narrow. Resize to 1440x900 for desktop verification.
 
-### Route: `/market-v2/:id`
+5. **`@fontsource-variable/inter`** — TypeScript reports "cannot find module" but package IS installed. Ignore the TS error in dev; `tsc -b` build will fail but `vite dev` works.
 
-### Figma Layout (1920x2046, bg=#0a0a0b)
+6. **Network type union** — any new network must be added to `HomeMarket['network']` union AND to `CHAIN_BG_CLASS` in LandingPage.tsx.
 
-Body container: `max-w-[1440px]` centered, inner `px-4` (16px each side) = 1376px content area.
-
-### Section Architecture
-
-| Section | Figma Node | Size | Status |
-|---------|-----------|------|--------|
-| Breadcrumb | 37222:132667 | 1376x16 | ✅ Built — Whales.Market > Pre-market > SKATE + "Delivery Scenarios" link |
-| Market Header | 37222:132669 | 1344x96 | ✅ Built — token info (SKATE, $0.0045, stats) + buttons (About, Airdrop, Earn, Create Order) |
-| Left Column | 37315:160537 | ~928x1826 | ✅ Frame — placeholder blocks for chart, order book, recent trades |
-| Divider | 37222:132672 | 1px vertical | ✅ Built |
-| Right Column | 37222:132673 | 384x1826 | ✅ Frame — trade panel (Buy/Sell tabs), price chart, my orders |
-| Bottom Stats | 37222:132677 | 1376x44 | ✅ Built — LIVE DATA + Total Vol + Vol 24h + links |
-
-### 2-Column Layout
-
-```
-┌─────────────────────────────────────────────────┐
-│ Breadcrumb: Whales.Market > Pre-market > SKATE  │
-├─────────────────────────────────────────────────┤
-│ Market Header: token info + action buttons      │
-├──────────────────────┬──┬───────────────────────┤
-│ Left (~928px)        │  │ Right (384px)         │
-│ ┌──────────────────┐ │  │ ┌─────────────────┐   │
-│ │ Trading Market   │ │  │ │ Trade SKATE     │   │
-│ │ tabs + filters   │ │  │ │ Buy/Sell form   │   │
-│ ├──────────────────┤ │  │ │ Trade (Taker)   │   │
-│ │ Chart (424px h)  │ │  │ ├─────────────────┤   │
-│ ├──────────────────┤ │  │ │ Price Chart     │   │
-│ │ Order Book       │ │  │ │ (336px h)       │   │
-│ │ (742px h)        │ │  │ ├─────────────────┤   │
-│ ├──────────────────┤ │  │ │ My Orders       │   │
-│ │ Recent Trades    │ │  │ │ Filled / Open   │   │
-│ │ (532px h)        │ │  │ │ (608px h)       │   │
-│ └──────────────────┘ │  │ └─────────────────┘   │
-├──────────────────────┴──┴───────────────────────┤
-│ Bottom Stats: LIVE DATA + Vol + links           │
-└─────────────────────────────────────────────────┘
-```
-
-### Market Header Details (from Figma API)
-
-**Left — token-info (696x48, gap-32):**
-- Token: 44x44 logo + 16x16 Solana chain badge + "SKATE" (18/500/#F9F9FA) + "Skate Chain" (12/400/#7A7A83)
-- Price: "$0.0045" (18/500/#F9F9FA) + "+0.13%" (12/400/#5BD197)
-- Stats: 24h Vol ($16,389.76 +1,159.36%) | Total Vol ($38,581.28) | Countdown ("not started" blue pill badge)
-
-**Right — buttons (632x48, gap-12):**
-- "About Skate" dropdown + expand icon (border #252527, r=8)
-- "Airdrop Checker" button (border #252527, r=8)
-- "Earn 50% Fee" button (border #252527, r=8)
-- More icon button (bg #1b1b1c, r=8)
-- Divider (1px #252527)
-- "Create Order" button (bg #000, r=8)
-
-### Inline Components (all defined in MarketDetailV2Page.tsx)
-
-| Component | Description |
-|-----------|-------------|
-| `Breadcrumb` | Navigation path + "Delivery Scenarios" green link |
-| `MarketHeader` | Token info + stats + action buttons row |
-| `LeftColumn` | Trading Market title + filter tabs + chart/order book/trades placeholders |
-| `RightColumn` | Trade panel (Buy/Sell) + price chart + my orders (Filled/Open tabs) |
-| `BottomStats` | Live data strip with vol stats + external links |
-
-### PENDING WORK — Sections to Build (in order)
-
-1. **Chart section** (Figma 37315:161696) — 928x424, candlestick/line chart
-2. **Order Book table** (Figma 37315:161694) — 928x742, buy/sell order rows
-3. **Recent Trades table** (Figma 37315:189288) — 928x532, trade history
-4. **Trade Panel** (Figma 37692:254729) — 384x456, buy/sell form with inputs
-5. **Price Chart** (Figma 37222:132675) — 384x336, mini chart + history
-6. **My Orders** (Figma 37225:131293) — 384x608, filled/open order list
-7. **Mock data** — create typed mock data for order book, trades, user orders
+7. **box-sizing on `<button>`** — macOS Safari/Chrome default `box-sizing: content-box` causes `w-full` + `px-N` to overflow. Always add `box-border` to button elements inside dropdowns.
 
 ---
 
-## 12. Other Pages (brief)
-
-> **Note:** MarketDetailPage (`/market/:id`) is the OLD version. MarketDetailV2Page (`/market-v2/:id`) is the NEW redesign from Figma.
-
-### MarketDetailPage (`/market/:id`)
-- 2-column layout: Listing info (left 60%) + Action panel (right 40%)
-- Order book with buy/sell sides
-- Trade form: price, amount, total auto-calc, fee display
-- Confirm modal → loading → success toast
-
-### MarketListPage (`/market`)
-- Grid of market cards with search input
-- Filter dropdown for categories
-- Cards link to `/market/:id`
-
-### PortfolioPage (`/portfolio`)
-- 4 stat cards (Total Value, Active Orders, Completed, P&L)
-- Tabs: My Orders | Trade History
-- Tables with status badges and P&L coloring
-
-### CreateListingPage (`/create`)
-- Form: token dropdown, buy/sell toggle, price, amount, expiry
-- Auto-calculated total value
-- Validation: inline errors on blur/submit
-- Preview modal → confirm → toast → redirect to `/market`
-
-### ProfilePage (`/profile`)
-- Avatar + wallet address (copy button)
-- Editable username (inline edit + save)
-- Stats: total trades, total volume, member since
-
----
-
-## 13. Known Technical Gotchas
-
-1. **Babel JSX parse errors** — bare `/* */` comments inside ternary branches will crash Vite. Always remove or wrap them.
-
-2. **Vite cached errors** — after fixing source, sometimes need to stop and restart the dev server for changes to take effect.
-
-3. **TableSortIcon type flexibility** — uses `string` props (not union types) so it works across different sort key types (SortKey, UpcomingSortKey) without casting.
-
-4. **Preview tool viewport** — defaults to narrow width. Must explicitly resize to 1440x900 for desktop verification.
-
-5. **Preview screenshot** — sometimes fails with "Current display surface not available". Workaround: `preview_eval` with `window.location.replace()` then retry.
-
-6. **Network type union** — any new network (e.g. `'sui'`) must be added to `HomeMarket['network']` union type in homeData.ts AND to `CHAIN_BG_CLASS` in LandingPage.tsx.
-
----
-
-## 14. Assets Not Yet In Project
-
-Investor avatar images uploaded by user (in Downloads, not yet copied):
-- `/Users/sophie/Downloads/investor1.png`
-- `/Users/sophie/Downloads/invest2.png`
-- `/Users/sophie/Downloads/invest3.png`
-- `/Users/sophie/Downloads/invest4.png`
-- `/Users/sophie/Downloads/invest5.png`
-
-These should be copied to `src/assets/images/` and used for the Investors & Backers column in the Upcoming tab.
-
----
-
-## 15. Figma Quick Reference
+## 13. Figma Quick Reference
 
 | What | Figma Node |
 |------|-----------|
-| Live Market table | `42532:726327` |
-| Upcoming tab table | `42540-727391` |
-| Recent Trades | `42532:726450` |
-| Bottom Stats | `42532:726513` |
+| Live Market table (landing) | `42532:726327` |
+| Upcoming tab table | `42540:727391` |
+| Recent Trades (landing) | `42532:726450` |
+| Bottom Stats (landing) | `42532:726513` |
 | Network filter dropdown | `38214:311363` |
-| Connect Wallet modal | `42670:317711` |
+| Connect Wallet modal | `38214:314593` |
 | Sort icon component | `35281:21856` |
+| Tab badge component | `42540:728736` |
+| Shark icon component | `36017:127255` |
+| Whale icon component | `36017:127244` |
+| Shrimp icon component | `36017:127247` |
 | **Market Detail V2 (full page)** | **`37222:132664`** |
 | V2 Market Header | `37222:132669` |
-| V2 Left Column (market) | `37315:160537` |
-| V2 Right Column (trade+chart) | `37222:132673` |
+| V2 Left Column | `37315:160537` |
+| V2 Right Column | `37222:132673` |
 | V2 Trade Panel | `37692:254729` |
 | V2 Chart | `37315:161696` |
 | V2 Order Book | `37315:161694` |
 | V2 Recent Trades | `37315:189288` |
 | V2 My Orders | `37225:131293` |
 | Foundation / Typography | `18610:2231` |
-| Foundation / Radius | `31281:58553` |
-| Foundation / Shadow | `31282:57431` |
 
 Figma URL pattern: `https://www.figma.com/design/mrTOtq806N1EFg8NOnsj99/WhalesMarket-v2--Sophie-code-?node-id=XXXX-XXXXX`
 
 ---
 
-## 16. How to Continue
+## 14. Pending Work (priority order)
 
-1. Read this file + `CLAUDE.md` (project rules)
-2. Run `npm run dev` to verify clean start
-3. **MarketDetailV2Page** — Section 11 has full pending work list (7 sections to build)
-   - Visit `http://localhost:5173/market-v2/skate-001` to see current frame
-   - Each section has its Figma node ID — use Figma API to fetch exact specs
-4. **Landing Page (Upcoming Tab)** — Section 6 has pending Moni Score fix + investor avatars
-5. Use Figma MCP tools or API to fetch exact design specs when needed
-   - Figma API token: create at figma.com/settings → Personal Access Tokens
+1. **Animal icons shape fix** — shark/whale/shrimp SVG paths are hand-crafted approximations. Exact Figma screenshots at `/tmp/figma_icons_scaled.png`. Colors confirmed: shark=#0A71CD, whale=#27C9D8, shrimp=#FF8F3C. Node IDs: 36017:127255 / 36017:127244 / 36017:127247.
+
+2. **Upcoming Tab — investor avatars** — images in assets (`investor1-5.png`), need to wire into `mockUpcomingListings.investorAvatars[]` in homeData.ts.
+
+3. **MarketDetailV2Page** — 6 sections to build (Chart, Order Book, Recent Trades, Trade Panel, Price Chart, My Orders). See Section 8.
+
+4. **MyDashboardPage** — needs Figma review and polish.
+
+---
+
+## 15. How to Continue
+
+1. Read this file + `CLAUDE.md`
+2. `npm run dev` → `http://127.0.0.1:5173`
+3. Key test URLs:
+   - `/` — Landing page (main demo page)
+   - `/market-v2/skate-001` — Market Detail V2
+   - `/dashboard` — My Dashboard
+4. Use Figma MCP (configured in `~/.claude/settings.json`) to fetch exact specs
    - File key: `mrTOtq806N1EFg8NOnsj99`
-6. Always reference Figma node IDs in code comments
-7. Never use raw hex inline — register in `tailwind.config.ts` or use existing tokens
-8. Test at 1440px desktop width via preview tool
-9. **Do NOT modify CONTEXT.md** during FE work — only update when explicitly requested
+   - Tools: `get_design_context`, `get_screenshot` (via Skill: figma:implement-design)
+5. Never use raw hex inline — use existing tailwind tokens or register new ones
+6. Test at 1440px desktop width
+7. **Do NOT modify CONTEXT.md** during FE work — only update when explicitly requested
