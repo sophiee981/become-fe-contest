@@ -16,7 +16,7 @@ interface InputProps {
   rightAction?: React.ReactNode
   className?: string
   id?: string
-  min?: number
+  min?: number | string
   max?: number
   step?: number | string
 }

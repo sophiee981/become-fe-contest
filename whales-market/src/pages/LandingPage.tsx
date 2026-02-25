@@ -1,9 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import {
-  Search, ChevronLeft, ChevronRight,
-  ArrowUpRight, Radio,
-} from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Search } from 'lucide-react'
 import { DownFillIcon } from '@/components/ui/icons/DownFillIcon'
 import skateLogoImg    from '@/assets/images/skate-logo.png'
 import chainSolanaImg  from '@/assets/images/chain-solana.png'
@@ -33,7 +30,7 @@ import { PageWrapper } from '@/components/layout/PageWrapper'
 import {
   mockHomeMarkets, mockHomeRecentTrades, mockUpcomingListings, mockEndedMarkets,
   HOME_STATS, METRICS,
-  type HomeMarket, type HomeRecentTrade, type UpcomingListing,
+  type HomeMarket, type HomeRecentTrade,
 } from '@/mock-data/homeData'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -133,89 +130,6 @@ const TabBadge: React.FC<{ count: number; active: boolean }> = ({ count, active 
   )}>
     {count}
   </span>
-)
-
-// ─── 1. Upcoming Section ──────────────────────────────────────────────────────
-
-const UpcomingSection: React.FC = () => (
-  <div className="mb-6">
-    <div className="flex items-center justify-between mb-3">
-      <div className="flex items-center gap-4 flex-wrap">
-        <h2 className="text-20 font-semibold text-[#f9f9fa]">Upcoming</h2>
-        <div className="flex items-center gap-1">
-          <span className="text-14 text-[#7a7a83]">Trade pre-TGE token allocations.</span>
-          <button className="text-14 text-[#7a7a83] hover:text-[#f9f9fa] transition-colors underline underline-offset-2 ml-1">
-            How it works?
-          </button>
-        </div>
-      </div>
-      <div className="flex gap-2 shrink-0">
-        {([ChevronLeft, ChevronRight] as const).map((Icon, i) => (
-          <button
-            key={i}
-            className="w-9 h-9 rounded-full border border-[#252527] flex items-center justify-center text-[#7a7a83] hover:text-[#f9f9fa] hover:border-[#3a3a3f] active:bg-[#252527] transition-colors"
-          >
-            <Icon size={16} />
-          </button>
-        ))}
-      </div>
-    </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {mockUpcomingListings.map((listing, idx) => (
-        <div
-          key={idx}
-          className="flex items-center gap-4 p-5 rounded-[12px] bg-[rgba(255,255,255,0.03)] border border-[#252527] hover:border-[#3a3a3f] hover:bg-[rgba(255,255,255,0.05)] transition-all cursor-pointer group"
-        >
-          <div className="w-11 h-11 rounded-full bg-[#252527] flex items-center justify-center text-2xl shrink-0 overflow-hidden">
-            {TOKEN_LOGOS[listing.token] ? (
-              <img
-                src={TOKEN_LOGOS[listing.token]}
-                alt={listing.token}
-                className="w-full h-full object-cover rounded-full"
-              />
-            ) : (
-              listing.logo
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="text-16 font-semibold text-[#f9f9fa]">{listing.token}</span>
-              <span className="px-1.5 py-0.5 rounded-full text-10 font-semibold bg-[#5bd197]/10 text-[#5bd197]">SOON</span>
-            </div>
-            <span className="text-14 text-[#7a7a83]">{listing.tokenName}</span>
-          </div>
-
-          <div className="text-right shrink-0">
-            {listing.status === 'countdown' && listing.countdown ? (
-              <div className="flex items-baseline gap-0.5">
-                {[
-                  { v: listing.countdown.days,    u: 'd' },
-                  { v: listing.countdown.hours,   u: 'h' },
-                  { v: listing.countdown.minutes, u: 'm' },
-                ].map(({ v, u }) => (
-                  <span key={u} className="flex items-baseline">
-                    <span className="text-16 font-semibold text-[#f9f9fa]">{v}</span>
-                    <span className="text-14 text-[#7a7a83]">{u}</span>
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <span className="text-14 text-[#7a7a83]">To be announced</span>
-            )}
-            <p className="text-10 text-[#7a7a83] text-right mt-0.5">listing time</p>
-          </div>
-
-          <Link
-            to="/market"
-            className="shrink-0 px-4 py-2 rounded-xl bg-white text-14 font-semibold text-[#0a0a0b] hover:bg-neutral-100 active:bg-neutral-200 transition-colors"
-          >
-            See details
-          </Link>
-        </div>
-      ))}
-    </div>
-  </div>
 )
 
 // ─── 2. Top Metrics ───────────────────────────────────────────────────────────
@@ -1206,22 +1120,6 @@ const LiveMarketTable: React.FC = () => {
 // ─── 4. Recent Trades Table ───────────────────────────────────────────────────
 // Figma node 42532:726450 — recent-trades-update
 // 7 cols: Time(128) | Side(128) | Pair(304) | Price(192) | Amount(192) | Collateral(192) | Tx.ID(192)
-
-// left_fill — Figma: nav-arrow left icon, fill=currentColor
-const LeftFillIcon: React.FC<{ size?: number; className?: string }> = ({ size = 16, className = '' }) => (
-  <svg width={size} height={size} viewBox="0 0 20 20" fill="currentColor"
-    xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
-    <path d="M13.5 17L6.5 10L13.5 3V17Z" />
-  </svg>
-)
-
-// right_fill — Figma: nav-arrow right icon, fill=currentColor
-const RightFillIcon: React.FC<{ size?: number; className?: string }> = ({ size = 16, className = '' }) => (
-  <svg width={size} height={size} viewBox="0 0 20 20" fill="currentColor"
-    xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
-    <path d="M6.5 3L13.5 10L6.5 17V3Z" />
-  </svg>
-)
 
 // arrow_right_up_fill — Figma: Tx.ID external link icon, 12×12
 const ArrowRightUpFillIcon: React.FC<{ size?: number; className?: string }> = ({ size = 12, className = '' }) => (

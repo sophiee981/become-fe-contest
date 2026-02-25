@@ -29,7 +29,6 @@ export const PortfolioPage: React.FC = () => {
   }
 
   const openOrders  = orders.filter(o => o.status === 'open' || o.status === 'partial')
-  const closedOrders = orders.filter(o => o.status === 'cancelled' || o.status === 'filled')
   const stats = mockPortfolioStats
   const isPosTotal = stats.pnl >= 0
 
