@@ -1,7 +1,7 @@
 # CONTEXT.md — Whales Market Session Handoff
 
 > File for AI session continuity. Read this **before** touching any code.
-> Last updated: **2026-02-25**
+> Last updated: **2026-02-25** (session 2: MarketDetailV2 layout frame)
 
 ---
 
@@ -43,6 +43,9 @@ c2492f5  Demo tweaks: ZBT token, MMT Solana chain, NEW MARKET badge
 c386e8e  Rebuild BottomStats (Figma 42532:726513)
 2d085d8  Add Upcoming tab with card grid, loading skeleton, tab transitions
 c25339a  Update sort icon to Figma specs, rebuild Upcoming tab as table
+74fde4f  Add Ended tab with 8 ended markets table, sort, skeleton loading
+f242f1a  Fix Ended tab columns per Figma node 42540-728736
+7c792ef  Add MarketDetailV2Page with route /market-v2/:id
 ```
 
 ---
@@ -95,6 +98,7 @@ src/
 │   ├── PortfolioPage.tsx       # (228 lines) Stats cards + My Orders + Trade History tabs
 │   ├── CreateListingPage.tsx   # (462 lines) Create order form + validation + preview modal
 │   ├── ProfilePage.tsx         # (273 lines) User profile + editable username
+│   ├── MarketDetailV2Page.tsx   # ★ NEW — Market Detail V2 (Figma 37222:132664) layout frame
 │   ├── PointsPage.tsx          # (139 lines) Rewards stub
 │   └── NotFoundPage.tsx        # (25 lines) 404
 ├── router/index.tsx            # Route definitions
@@ -130,6 +134,7 @@ src/
 | `/portfolio` | PortfolioPage | Functional |
 | `/create` | CreateListingPage | Functional |
 | `/profile` | ProfilePage | Functional |
+| `/market-v2/:id` | MarketDetailV2Page | ★ NEW — layout frame only, details pending |
 | `/points` | PointsPage | Stub |
 | `*` | NotFoundPage | Simple 404 |
 
@@ -333,7 +338,93 @@ These are NOT in `src/components/` — they are defined inline at the top of Lan
 
 ---
 
-## 11. Other Pages (brief)
+## 11. MarketDetailV2Page — NEW (Figma node 37222:132664)
+
+This is a **new Market Detail page** built from Figma design for token SKATE. Currently contains **layout frame only** — placeholder sections ready to be filled with real components.
+
+### Route: `/market-v2/:id`
+
+### Figma Layout (1920x2046, bg=#0a0a0b)
+
+Body container: `max-w-[1440px]` centered, inner `px-4` (16px each side) = 1376px content area.
+
+### Section Architecture
+
+| Section | Figma Node | Size | Status |
+|---------|-----------|------|--------|
+| Breadcrumb | 37222:132667 | 1376x16 | ✅ Built — Whales.Market > Pre-market > SKATE + "Delivery Scenarios" link |
+| Market Header | 37222:132669 | 1344x96 | ✅ Built — token info (SKATE, $0.0045, stats) + buttons (About, Airdrop, Earn, Create Order) |
+| Left Column | 37315:160537 | ~928x1826 | ✅ Frame — placeholder blocks for chart, order book, recent trades |
+| Divider | 37222:132672 | 1px vertical | ✅ Built |
+| Right Column | 37222:132673 | 384x1826 | ✅ Frame — trade panel (Buy/Sell tabs), price chart, my orders |
+| Bottom Stats | 37222:132677 | 1376x44 | ✅ Built — LIVE DATA + Total Vol + Vol 24h + links |
+
+### 2-Column Layout
+
+```
+┌─────────────────────────────────────────────────┐
+│ Breadcrumb: Whales.Market > Pre-market > SKATE  │
+├─────────────────────────────────────────────────┤
+│ Market Header: token info + action buttons      │
+├──────────────────────┬──┬───────────────────────┤
+│ Left (~928px)        │  │ Right (384px)         │
+│ ┌──────────────────┐ │  │ ┌─────────────────┐   │
+│ │ Trading Market   │ │  │ │ Trade SKATE     │   │
+│ │ tabs + filters   │ │  │ │ Buy/Sell form   │   │
+│ ├──────────────────┤ │  │ │ Trade (Taker)   │   │
+│ │ Chart (424px h)  │ │  │ ├─────────────────┤   │
+│ ├──────────────────┤ │  │ │ Price Chart     │   │
+│ │ Order Book       │ │  │ │ (336px h)       │   │
+│ │ (742px h)        │ │  │ ├─────────────────┤   │
+│ ├──────────────────┤ │  │ │ My Orders       │   │
+│ │ Recent Trades    │ │  │ │ Filled / Open   │   │
+│ │ (532px h)        │ │  │ │ (608px h)       │   │
+│ └──────────────────┘ │  │ └─────────────────┘   │
+├──────────────────────┴──┴───────────────────────┤
+│ Bottom Stats: LIVE DATA + Vol + links           │
+└─────────────────────────────────────────────────┘
+```
+
+### Market Header Details (from Figma API)
+
+**Left — token-info (696x48, gap-32):**
+- Token: 44x44 logo + 16x16 Solana chain badge + "SKATE" (18/500/#F9F9FA) + "Skate Chain" (12/400/#7A7A83)
+- Price: "$0.0045" (18/500/#F9F9FA) + "+0.13%" (12/400/#5BD197)
+- Stats: 24h Vol ($16,389.76 +1,159.36%) | Total Vol ($38,581.28) | Countdown ("not started" blue pill badge)
+
+**Right — buttons (632x48, gap-12):**
+- "About Skate" dropdown + expand icon (border #252527, r=8)
+- "Airdrop Checker" button (border #252527, r=8)
+- "Earn 50% Fee" button (border #252527, r=8)
+- More icon button (bg #1b1b1c, r=8)
+- Divider (1px #252527)
+- "Create Order" button (bg #000, r=8)
+
+### Inline Components (all defined in MarketDetailV2Page.tsx)
+
+| Component | Description |
+|-----------|-------------|
+| `Breadcrumb` | Navigation path + "Delivery Scenarios" green link |
+| `MarketHeader` | Token info + stats + action buttons row |
+| `LeftColumn` | Trading Market title + filter tabs + chart/order book/trades placeholders |
+| `RightColumn` | Trade panel (Buy/Sell) + price chart + my orders (Filled/Open tabs) |
+| `BottomStats` | Live data strip with vol stats + external links |
+
+### PENDING WORK — Sections to Build (in order)
+
+1. **Chart section** (Figma 37315:161696) — 928x424, candlestick/line chart
+2. **Order Book table** (Figma 37315:161694) — 928x742, buy/sell order rows
+3. **Recent Trades table** (Figma 37315:189288) — 928x532, trade history
+4. **Trade Panel** (Figma 37692:254729) — 384x456, buy/sell form with inputs
+5. **Price Chart** (Figma 37222:132675) — 384x336, mini chart + history
+6. **My Orders** (Figma 37225:131293) — 384x608, filled/open order list
+7. **Mock data** — create typed mock data for order book, trades, user orders
+
+---
+
+## 12. Other Pages (brief)
+
+> **Note:** MarketDetailPage (`/market/:id`) is the OLD version. MarketDetailV2Page (`/market-v2/:id`) is the NEW redesign from Figma.
 
 ### MarketDetailPage (`/market/:id`)
 - 2-column layout: Listing info (left 60%) + Action panel (right 40%)
@@ -364,7 +455,7 @@ These are NOT in `src/components/` — they are defined inline at the top of Lan
 
 ---
 
-## 12. Known Technical Gotchas
+## 13. Known Technical Gotchas
 
 1. **Babel JSX parse errors** — bare `/* */` comments inside ternary branches will crash Vite. Always remove or wrap them.
 
@@ -380,7 +471,7 @@ These are NOT in `src/components/` — they are defined inline at the top of Lan
 
 ---
 
-## 13. Assets Not Yet In Project
+## 14. Assets Not Yet In Project
 
 Investor avatar images uploaded by user (in Downloads, not yet copied):
 - `/Users/sophie/Downloads/investor1.png`
@@ -393,7 +484,7 @@ These should be copied to `src/assets/images/` and used for the Investors & Back
 
 ---
 
-## 14. Figma Quick Reference
+## 15. Figma Quick Reference
 
 | What | Figma Node |
 |------|-----------|
@@ -404,6 +495,15 @@ These should be copied to `src/assets/images/` and used for the Investors & Back
 | Network filter dropdown | `38214:311363` |
 | Connect Wallet modal | `42670:317711` |
 | Sort icon component | `35281:21856` |
+| **Market Detail V2 (full page)** | **`37222:132664`** |
+| V2 Market Header | `37222:132669` |
+| V2 Left Column (market) | `37315:160537` |
+| V2 Right Column (trade+chart) | `37222:132673` |
+| V2 Trade Panel | `37692:254729` |
+| V2 Chart | `37315:161696` |
+| V2 Order Book | `37315:161694` |
+| V2 Recent Trades | `37315:189288` |
+| V2 My Orders | `37225:131293` |
 | Foundation / Typography | `18610:2231` |
 | Foundation / Radius | `31281:58553` |
 | Foundation / Shadow | `31282:57431` |
@@ -412,12 +512,18 @@ Figma URL pattern: `https://www.figma.com/design/mrTOtq806N1EFg8NOnsj99/WhalesMa
 
 ---
 
-## 15. How to Continue
+## 16. How to Continue
 
 1. Read this file + `CLAUDE.md` (project rules)
 2. Run `npm run dev` to verify clean start
-3. Check pending work in Section 6 (Upcoming Tab)
-4. Use Figma MCP tools to fetch exact design specs when needed
-5. Always reference Figma node IDs in code comments
-6. Never use raw hex inline — register in `tailwind.config.ts` or use existing tokens
-7. Test at 1440px desktop width via preview tool
+3. **MarketDetailV2Page** — Section 11 has full pending work list (7 sections to build)
+   - Visit `http://localhost:5173/market-v2/skate-001` to see current frame
+   - Each section has its Figma node ID — use Figma API to fetch exact specs
+4. **Landing Page (Upcoming Tab)** — Section 6 has pending Moni Score fix + investor avatars
+5. Use Figma MCP tools or API to fetch exact design specs when needed
+   - Figma API token: create at figma.com/settings → Personal Access Tokens
+   - File key: `mrTOtq806N1EFg8NOnsj99`
+6. Always reference Figma node IDs in code comments
+7. Never use raw hex inline — register in `tailwind.config.ts` or use existing tokens
+8. Test at 1440px desktop width via preview tool
+9. **Do NOT modify CONTEXT.md** during FE work — only update when explicitly requested
