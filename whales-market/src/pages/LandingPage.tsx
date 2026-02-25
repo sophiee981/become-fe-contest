@@ -648,22 +648,29 @@ const UpcomingTabContent: React.FC<{ loading: boolean }> = ({ loading }) => {
 }
 
 // ─── Ended Tab Content ─────────────────────────────────────────────────────
-// Figma node 42540-728736 — same 6-column layout as Live Market table
-// Columns: Token(22%) | Last Price(15%) | 24h Vol(15%) | Total Vol(16%) | Implied FDV(16%) | Settle Time(16%)
-// Settle Time shows settled date + "ENDED" pill badge
+// Figma node 42540-728736
+// 6 columns: Token(fill ~30%) | Last Price(14.5%) | Total Vol(14.5%) | Collateral Token(12%) | Settle Starts(14.5%) | Settle Ends(14.5%)
+// Row height: 76px | border-bottom 1px #1b1b1c
 
-type EndedSortKey = 'price' | 'vol24h' | 'totalVol' | 'fdv' | 'priceChange24h'
+type EndedSortKey = 'price' | 'totalVol'
 
 const EndedSkeletonRow: React.FC = () => (
   <tr className="border-b border-border-subtle animate-pulse">
     <td className="pl-2 pr-2 py-4"><div className="flex items-center gap-3"><div className="w-11 h-11 rounded-full bg-[#252527]" /><div className="space-y-2"><div className="h-4 w-16 bg-[#252527] rounded" /><div className="h-3 w-24 bg-[#1b1b1c] rounded" /></div></div></td>
+    <td className="pl-4 pr-2 py-3 text-right"><div className="h-4 w-16 bg-[#252527] rounded ml-auto" /></td>
+    <td className="pl-4 pr-2 py-3 text-right"><div className="h-4 w-16 bg-[#252527] rounded ml-auto" /></td>
+    <td className="pl-4 pr-2 py-3"><div className="flex gap-1 justify-end">{[0,1,2].map(i => <div key={i} className="w-4 h-4 rounded-full bg-[#252527]" />)}</div></td>
     <td className="pl-4 pr-2 py-3 text-right"><div className="flex flex-col gap-1 items-end"><div className="h-4 w-16 bg-[#252527] rounded" /><div className="h-3 w-12 bg-[#1b1b1c] rounded" /></div></td>
-    <td className="pl-4 pr-2 py-3 text-right"><div className="flex flex-col gap-1 items-end"><div className="h-4 w-12 bg-[#252527] rounded" /><div className="h-3 w-10 bg-[#1b1b1c] rounded" /></div></td>
-    <td className="pl-4 pr-2 py-3 text-right"><div className="flex flex-col gap-1 items-end"><div className="h-4 w-14 bg-[#252527] rounded" /><div className="h-3 w-10 bg-[#1b1b1c] rounded" /></div></td>
-    <td className="pl-4 pr-2 py-3 text-right"><div className="h-4 w-12 bg-[#252527] rounded ml-auto" /></td>
-    <td className="pl-4 pr-2 py-3 text-right"><div className="flex flex-col gap-1 items-end"><div className="h-4 w-16 bg-[#252527] rounded" /><div className="h-5 w-14 bg-[#252527] rounded-full" /></div></td>
+    <td className="pl-4 pr-2 py-3 text-right"><div className="flex flex-col gap-1 items-end"><div className="h-4 w-16 bg-[#252527] rounded" /><div className="h-3 w-12 bg-[#1b1b1c] rounded" /></div></td>
   </tr>
 )
+
+// Collateral token colors — Figma: 16×16 circles inside 20×20 frames
+const COLLATERAL_COLORS: Record<string, string> = {
+  USDC: '#2775CA',
+  USDT: '#26A17B',
+  SOL:  '#9945FF',
+}
 
 const EndedTabContent: React.FC<{ loading: boolean }> = ({ loading }) => {
   const navigate = useNavigate()
@@ -683,13 +690,15 @@ const EndedTabContent: React.FC<{ loading: boolean }> = ({ loading }) => {
     [sortKey, sortDir]
   )
 
+  // Figma: Token=560px(fill) | Last Price=192px | Total Vol=192px | Collateral=160px | Settle Starts=192px | Settle Ends=192px
+  // As %: Token ~30% (fill) | 14.5% | 14.5% | 12% | 14.5% | 14.5%
   const ENDED_COLS: { label: string; field: EndedSortKey | null; w: string }[] = [
-    { label: 'Token',            field: null,              w: '22%' },
-    { label: 'Last Price ($)',    field: 'price',           w: '15%' },
-    { label: '24h Vol. ($)',      field: 'vol24h',          w: '15%' },
-    { label: 'Total Vol. ($)',    field: 'totalVol',        w: '16%' },
-    { label: 'Implied FDV ($)',   field: 'fdv',             w: '16%' },
-    { label: 'Settle Time (UTC)', field: null,              w: '16%' },
+    { label: 'Token',               field: null,       w: '30%' },
+    { label: 'Last Price ($)',       field: 'price',    w: '14.5%' },
+    { label: 'Total Vol. ($)',       field: 'totalVol', w: '14.5%' },
+    { label: 'Collateral Token',     field: null,       w: '12%' },
+    { label: 'Settle Starts (UTC)',  field: null,       w: '14.5%' },
+    { label: 'Settle Ends (UTC)',    field: null,       w: '14.5%' },
   ]
 
   return (
@@ -728,7 +737,7 @@ const EndedTabContent: React.FC<{ loading: boolean }> = ({ loading }) => {
                 onClick={() => navigate(`/market/${market.id}`)}
                 className="border-b border-border-subtle hover:bg-white/[0.02] transition-colors cursor-pointer group"
               >
-                {/* ── Token cell ── */}
+                {/* ── Token — 44×44 image slot + chain badge + name stack ── */}
                 <td className="pl-2 pr-2 py-4">
                   <div className="flex items-center gap-3">
                     <div className="relative shrink-0 w-11 h-11 flex items-center justify-center">
@@ -750,47 +759,78 @@ const EndedTabContent: React.FC<{ loading: boolean }> = ({ loading }) => {
                   </div>
                 </td>
 
-                {/* ── Last Price ($) ── */}
+                {/* ── Last Price ($) — Figma: 500/14px/#f9f9fa, right-aligned ── */}
                 <td className="pl-4 pr-2 py-3 text-right">
-                  <div className="flex flex-col gap-1 items-end">
-                    <span className="text-14 font-medium text-text-primary tabular-nums">${fmtPrice(market.price)}</span>
-                    <ChangeTag value={market.priceChange24h} />
-                  </div>
-                </td>
-
-                {/* ── 24h Vol. ($) — ended markets show 0 / no change ── */}
-                <td className="pl-4 pr-2 py-3 text-right">
-                  <div className="flex flex-col gap-1 items-end">
-                    <span className="text-14 font-medium text-text-primary tabular-nums">{fmtVol(market.vol24h)}</span>
-                    <ChangeTag value={market.vol24hChange} />
-                  </div>
-                </td>
-
-                {/* ── Total Vol. ($) ── */}
-                <td className="pl-4 pr-2 py-3 text-right">
-                  <div className="flex flex-col gap-1 items-end">
-                    <span className="text-14 font-medium text-text-primary tabular-nums">{fmtVol(market.totalVol)}</span>
-                    <ChangeTag value={market.totalVolChange} />
-                  </div>
-                </td>
-
-                {/* ── Implied FDV ($) ── */}
-                <td className="pl-4 pr-2 py-3 text-right align-top">
                   <span className="text-14 font-medium text-text-primary tabular-nums">
-                    {market.fdv.toFixed(2)}M
+                    ${fmtPrice(market.price)}
                   </span>
                 </td>
 
-                {/* ── Settle Time (UTC) — show date + "ENDED" pill ── */}
+                {/* ── Total Vol. ($) — Figma: 500/14px/#f9f9fa, right-aligned ── */}
                 <td className="pl-4 pr-2 py-3 text-right">
-                  <div className="flex flex-col gap-1 items-end">
-                    <span className="text-14 font-medium text-text-primary tabular-nums">
-                      {market.settleDisplay}
-                    </span>
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-10 font-medium bg-[#7a7a83]/10 text-[#7a7a83] w-fit">
-                      ENDED
-                    </span>
+                  <span className="text-14 font-medium text-text-primary tabular-nums">
+                    {market.totalVol.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </td>
+
+                {/* ── Collateral Token — Figma: 3 circular 16×16 icons inside 20×20 frames ── */}
+                <td className="pl-4 pr-2 py-3">
+                  <div className="flex items-center gap-1 justify-end">
+                    {(market.collateralTokens ?? [market.collateral]).map((tok) => (
+                      <span
+                        key={tok}
+                        className="w-5 h-5 flex items-center justify-center p-0.5 shrink-0"
+                      >
+                        <div
+                          className="w-4 h-4 rounded-full flex items-center justify-center text-white font-bold select-none"
+                          style={{ backgroundColor: COLLATERAL_COLORS[tok] ?? '#252527', fontSize: 7, lineHeight: '1' }}
+                        >
+                          {tok[0]}
+                        </div>
+                      </span>
+                    ))}
                   </div>
+                </td>
+
+                {/* ── Settle Starts (UTC) — Figma: date 500/14px/#f9f9fa + time 400/14px/#7a7a83, or "TBA" ── */}
+                <td className="pl-4 pr-2 py-3 text-right">
+                  {market.settleStartDisplay && market.settleStartDisplay !== 'TBA' ? (
+                    <div className="flex flex-col gap-1 items-end">
+                      <span className="text-14 font-medium text-text-primary tabular-nums">
+                        {market.settleStartDisplay}
+                      </span>
+                      {market.settleStartTime && (
+                        <span className="text-14 font-normal text-text-muted tabular-nums">
+                          {market.settleStartTime}
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-14 font-normal text-text-muted">TBA</span>
+                  )}
+                </td>
+
+                {/* ── Settle Ends (UTC) — Figma: date 500/14px/#f9f9fa + time/countdown, or "TBA"
+                    Countdown text: 400/14px/#fb923c (orange) ── */}
+                <td className="pl-4 pr-2 py-3 text-right">
+                  {market.settleEndDisplay && market.settleEndDisplay !== 'TBA' ? (
+                    <div className="flex flex-col gap-1 items-end">
+                      <span className="text-14 font-medium text-text-primary tabular-nums">
+                        {market.settleEndDisplay}
+                      </span>
+                      {market.settleEndCountdown ? (
+                        <span className="text-14 font-normal text-[#fb923c] tabular-nums">
+                          {market.settleEndCountdown}
+                        </span>
+                      ) : market.settleEndTime ? (
+                        <span className="text-14 font-normal text-text-muted tabular-nums">
+                          {market.settleEndTime}
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <span className="text-14 font-normal text-text-muted">TBA</span>
+                  )}
                 </td>
               </tr>
             ))

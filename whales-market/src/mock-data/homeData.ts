@@ -20,6 +20,13 @@ export interface HomeMarket {
   settleDisplay: string         // e.g. '10/06/2025' | 'TBA'
   status: 'in-progress' | 'upcoming' | 'active' | 'ended'
   settleCountdown?: string      // '3h:34m:59s' for in-progress
+  // ─── Ended tab fields (Figma node 42540-728736) ───
+  collateralTokens?: string[]          // e.g. ['USDC', 'SOL'] — circular icons in Collateral Token column
+  settleStartDisplay?: string          // '30/05/2025' or 'TBA'
+  settleStartTime?: string | null      // '02:00 PM' or null
+  settleEndDisplay?: string            // '30/05/2025' or 'TBA'
+  settleEndTime?: string | null        // '06:00 PM' or null
+  settleEndCountdown?: string | null   // '03h:18m:26s' (orange) or null
 }
 
 export const mockHomeMarkets: HomeMarket[] = [
@@ -300,7 +307,8 @@ export const mockUpcomingListings: UpcomingListing[] = [
 ]
 
 // ─── Ended Markets — Figma node 42540:728736 ────────────────────────────────
-// Same HomeMarket shape, status='ended', settle dates in the past
+// Columns: Token | Last Price ($) | Total Vol. ($) | Collateral Token | Settle Starts (UTC) | Settle Ends (UTC)
+// Reuses HomeMarket shape + ended-specific fields: collateralTokens, settleStart/End
 
 export const mockEndedMarkets: HomeMarket[] = [
   {
@@ -321,6 +329,11 @@ export const mockEndedMarkets: HomeMarket[] = [
     settleTime: '2024-04-03T14:00:00Z',
     settleDisplay: '03/04/2024',
     status: 'ended',
+    collateralTokens: ['USDC', 'SOL'],
+    settleStartDisplay: '20/03/2024',
+    settleStartTime: '02:00 PM',
+    settleEndDisplay: '03/04/2024',
+    settleEndTime: '02:00 PM',
   },
   {
     id: 'tnsr-ended',
@@ -340,6 +353,11 @@ export const mockEndedMarkets: HomeMarket[] = [
     settleTime: '2024-04-08T15:00:00Z',
     settleDisplay: '08/04/2024',
     status: 'ended',
+    collateralTokens: ['USDC'],
+    settleStartDisplay: '25/03/2024',
+    settleStartTime: '03:00 PM',
+    settleEndDisplay: '08/04/2024',
+    settleEndTime: '03:00 PM',
   },
   {
     id: 'parcl-ended',
@@ -359,6 +377,11 @@ export const mockEndedMarkets: HomeMarket[] = [
     settleTime: '2024-04-15T14:00:00Z',
     settleDisplay: '15/04/2024',
     status: 'ended',
+    collateralTokens: ['USDC', 'SOL'],
+    settleStartDisplay: '01/04/2024',
+    settleStartTime: '02:00 PM',
+    settleEndDisplay: '15/04/2024',
+    settleEndTime: '02:00 PM',
   },
   {
     id: 'ethfi-ended',
@@ -378,6 +401,11 @@ export const mockEndedMarkets: HomeMarket[] = [
     settleTime: '2024-03-18T14:00:00Z',
     settleDisplay: '18/03/2024',
     status: 'ended',
+    collateralTokens: ['USDC', 'USDT'],
+    settleStartDisplay: '04/03/2024',
+    settleStartTime: '02:00 PM',
+    settleEndDisplay: '18/03/2024',
+    settleEndTime: '02:00 PM',
   },
   {
     id: 'strk-ended',
@@ -397,6 +425,11 @@ export const mockEndedMarkets: HomeMarket[] = [
     settleTime: '2024-02-20T14:00:00Z',
     settleDisplay: '20/02/2024',
     status: 'ended',
+    collateralTokens: ['USDC', 'USDT', 'SOL'],
+    settleStartDisplay: '06/02/2024',
+    settleStartTime: '02:00 PM',
+    settleEndDisplay: '20/02/2024',
+    settleEndTime: '02:00 PM',
   },
   {
     id: 'jup-ended',
@@ -416,6 +449,11 @@ export const mockEndedMarkets: HomeMarket[] = [
     settleTime: '2024-01-31T14:00:00Z',
     settleDisplay: '31/01/2024',
     status: 'ended',
+    collateralTokens: ['USDC', 'SOL'],
+    settleStartDisplay: '17/01/2024',
+    settleStartTime: '02:00 PM',
+    settleEndDisplay: '31/01/2024',
+    settleEndTime: '02:00 PM',
   },
   {
     id: 'pyth-ended',
@@ -435,6 +473,11 @@ export const mockEndedMarkets: HomeMarket[] = [
     settleTime: '2023-11-20T14:00:00Z',
     settleDisplay: '20/11/2023',
     status: 'ended',
+    collateralTokens: ['USDC'],
+    settleStartDisplay: '06/11/2023',
+    settleStartTime: '02:00 PM',
+    settleEndDisplay: '20/11/2023',
+    settleEndTime: '02:00 PM',
   },
   {
     id: 'wen-ended',
@@ -454,6 +497,11 @@ export const mockEndedMarkets: HomeMarket[] = [
     settleTime: '2024-01-26T14:00:00Z',
     settleDisplay: '26/01/2024',
     status: 'ended',
+    collateralTokens: ['USDC', 'SOL'],
+    settleStartDisplay: '12/01/2024',
+    settleStartTime: '02:00 PM',
+    settleEndDisplay: '26/01/2024',
+    settleEndTime: '02:00 PM',
   },
 ]
 
