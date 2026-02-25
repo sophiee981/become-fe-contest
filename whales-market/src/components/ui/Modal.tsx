@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import { X } from 'lucide-react'
 import { clsx } from 'clsx'
+import { MODAL_SHADOW } from '@/constants/ui'
 
 interface ModalProps {
   isOpen: boolean
@@ -53,19 +54,20 @@ export const Modal: React.FC<ModalProps> = ({
       aria-modal="true"
       role="dialog"
     >
-      {/* Backdrop */}
+      {/* Backdrop — Figma: #000 80% + blur 4px */}
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-backdrop-in"
+        className="absolute inset-0 bg-black/80 backdrop-blur-[4px] animate-backdrop-in"
         onClick={onClose}
       />
 
-      {/* Modal panel */}
+      {/* Modal panel — Figma: shadow blur=32 rgba(0,0,0,0.2) */}
       <div
         className={clsx(
-          'relative w-full bg-bg-surface border border-border-default rounded-2xl shadow-modal',
+          'relative w-full bg-bg-surface border border-border-default rounded-2xl',
           'animate-modal-in',
           sizeMap[size],
         )}
+        style={{ boxShadow: MODAL_SHADOW }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
