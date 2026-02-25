@@ -55,7 +55,7 @@ export const Modal: React.FC<ModalProps> = ({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fade-in"
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-backdrop-in"
         onClick={onClose}
       />
 
@@ -63,7 +63,7 @@ export const Modal: React.FC<ModalProps> = ({
       <div
         className={clsx(
           'relative w-full bg-bg-surface border border-border-default rounded-2xl shadow-modal',
-          'animate-fade-in',
+          'animate-modal-in',
           sizeMap[size],
         )}
         onClick={e => e.stopPropagation()}

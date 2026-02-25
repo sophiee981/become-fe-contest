@@ -237,13 +237,31 @@ const config: Config = {
           '0%':   { transform: 'scale(0.95)', opacity: '0' },
           '100%': { transform: 'scale(1)',    opacity: '1' },
         },
+        // Dropdown: fade + slide-down + subtle scale (for all floating panels)
+        'dropdown-in': {
+          '0%':   { opacity: '0', transform: 'translateY(-6px) scale(0.97)' },
+          '100%': { opacity: '1', transform: 'translateY(0)    scale(1)'    },
+        },
+        // Modal: backdrop fade
+        'backdrop-in': {
+          '0%':   { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        // Modal panel: scale-up from center
+        'modal-in': {
+          '0%':   { opacity: '0', transform: 'scale(0.96) translateY(8px)' },
+          '100%': { opacity: '1', transform: 'scale(1)    translateY(0)'   },
+        },
       },
       animation: {
-        shimmer:     'shimmer 2s infinite linear',
-        'slide-in':  'slide-in 0.25s ease-out',
-        'slide-out': 'slide-out 0.2s ease-in',
-        'fade-in':   'fade-in 0.15s ease-out',
-        'scale-in':  'scale-in 0.15s ease-out',
+        shimmer:       'shimmer 2s infinite linear',
+        'slide-in':    'slide-in 0.25s ease-out',
+        'slide-out':   'slide-out 0.2s ease-in',
+        'fade-in':     'fade-in 0.15s ease-out',
+        'scale-in':    'scale-in 0.15s ease-out',
+        'dropdown-in': 'dropdown-in 0.14s cubic-bezier(0.16, 1, 0.3, 1)',
+        'backdrop-in': 'backdrop-in 0.2s ease-out',
+        'modal-in':    'modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
       },
     },
   },

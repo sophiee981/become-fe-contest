@@ -328,7 +328,7 @@ export const Navbar: React.FC<NavbarProps> = ({ walletAddress, onConnect, onDisc
                   {avatarOpen && (
                     <div
                       role="menu"
-                      className="absolute right-0 top-[calc(100%+8px)] w-64 bg-[#1b1b1c] rounded-2xl overflow-hidden z-50"
+                      className="absolute right-0 top-[calc(100%+8px)] w-64 bg-[#1b1b1c] rounded-2xl overflow-hidden z-50 animate-dropdown-in"
                       style={{ boxShadow: '0 16px 48px rgba(0,0,0,0.64), 0 0 0 1px rgba(255,255,255,0.06)' }}
                     >
 
@@ -427,7 +427,7 @@ export const Navbar: React.FC<NavbarProps> = ({ walletAddress, onConnect, onDisc
 
                       {/* ── Section 3: Link Wallet ──────────────────────────
                           Figma: pad=8 all | border-b #252527
-                          1 item | active bg=#252527 (shown as active in Figma)
+                          1 item | no default bg, hover shows bg
                           Height: 48px
                       ────────────────────────────────────────────────── */}
                       <div className="p-2 border-b border-[#252527]">
@@ -435,7 +435,7 @@ export const Navbar: React.FC<NavbarProps> = ({ walletAddress, onConnect, onDisc
                           role="menuitem"
                           className="flex items-center gap-2 w-full px-2 py-[6px] rounded-lg
                                      text-[14px] font-[500] leading-[20px] text-[#f9f9fa]
-                                     bg-[#252527] hover:bg-[#2e2e34] transition-colors duration-150"
+                                     hover:bg-[#252527] transition-colors duration-150"
                           onClick={() => setAvatarOpen(false)}
                         >
                           <span className="w-5 h-5 flex items-center justify-center p-0.5 shrink-0">

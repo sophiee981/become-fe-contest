@@ -524,7 +524,7 @@ const LiveMarketTable: React.FC = () => {
 
             {/* Dropdown panel — Figma: select-network 192×220 bg=#1b1b1c, border=#252527, rounded-xl */}
             {netOpen && (
-              <div className="absolute right-0 top-[calc(100%+6px)] z-50 w-[192px] bg-[#1b1b1c] border border-[#252527] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] overflow-hidden py-2">
+              <div className="absolute right-0 top-[calc(100%+6px)] z-50 w-[192px] bg-[#1b1b1c] border border-[#252527] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.6)] overflow-hidden py-2 animate-dropdown-in">
 
                 {/* Title — Figma: "Filter by Network" text-12 fill=#7a7a83, px-2 */}
                 <div className="px-2 pb-1">
