@@ -142,31 +142,38 @@ export const mockHomeMarkets: HomeMarket[] = [
   },
 ]
 
+// ─── Recent Trades — updated per Figma node 42532:726450 ─────────────────────
+// 7 columns: Time | Side | Pair | Price ($) | Amount | Collateral | Tx.ID
+// Side col: Buy=#5BD197 / Sell=#FD5E67 + optional RS badge (#EAB308)
+// Amount col: formatted amount + quote token circle (right-aligned)
+// Collateral col: formatted amount + collateral token circle + shark icon (right-aligned)
+
 export interface HomeRecentTrade {
   id: string
   timeAgo: string
   side: 'buy' | 'sell'
-  userAvatar: string
-  marketType: 'Pre-market' | 'Points' | 'Allocation'
-  pair: string
+  isRS: boolean           // show yellow "RS" pill badge in Side column
+  pair: string            // e.g. 'SKATE/USDC'
+  baseToken: string       // leading token, used for pair icon color
   price: number
-  amount: string      // formatted: '3.64K'
-  collateral: number  // USDC
+  amount: string          // formatted: '3.64K', '100.00K'
+  amountToken: string     // quote token for Amount col icon, e.g. 'USDC'
+  collateral: string      // formatted: '200.00', '1.00K'
+  collateralToken: string // collateral token for Collateral col icon, e.g. 'USDC'
   txId: string
-  discount: number    // e.g. -8.5 (%)
 }
 
 export const mockHomeRecentTrades: HomeRecentTrade[] = [
-  { id: 'rt-1',  timeAgo: '1m ago',  side: 'sell', userAvatar: 'RS', marketType: 'Pre-market', pair: 'SKATE/USDC', price: 0.0550, amount: '3.64K',  collateral: 250, txId: '0xa1b2...', discount: -8.5 },
-  { id: 'rt-2',  timeAgo: '5m ago',  side: 'sell', userAvatar: 'RS', marketType: 'Pre-market', pair: 'SKATE/USDC', price: 0.0550, amount: '18.18K', collateral: 250, txId: '0xa2c3...', discount: -8.5 },
-  { id: 'rt-3',  timeAgo: '9m ago',  side: 'buy',  userAvatar: 'RS', marketType: 'Pre-market', pair: 'IKA/USDT',   price: 0.1190, amount: '4.20K',  collateral: 250, txId: '0xb3d4...', discount: -8.5 },
-  { id: 'rt-4',  timeAgo: '12m ago', side: 'buy',  userAvatar: 'RS', marketType: 'Pre-market', pair: 'PENGU/SOL',  price: 0.0050, amount: '85.35K', collateral: 250, txId: '0xc4e5...', discount: -8.5 },
-  { id: 'rt-5',  timeAgo: '14m ago', side: 'sell', userAvatar: 'MK', marketType: 'Pre-market', pair: 'GRASS/USDC', price: 0.1100, amount: '9.09K',  collateral: 500, txId: '0xd5f6...', discount: -5.2 },
-  { id: 'rt-6',  timeAgo: '18m ago', side: 'buy',  userAvatar: 'TW', marketType: 'Pre-market', pair: 'LOUD/USDC',  price: 0.9638, amount: '1.04K', collateral: 1000, txId: '0xe6g7...', discount: -3.1 },
-  { id: 'rt-7',  timeAgo: '22m ago', side: 'buy',  userAvatar: 'AL', marketType: 'Points',      pair: 'ERA/USDC',   price: 0.0464, amount: '21.5K', collateral: 250, txId: '0xf7h8...', discount: -6.8 },
-  { id: 'rt-8',  timeAgo: '25m ago', side: 'sell', userAvatar: 'BN', marketType: 'Pre-market', pair: 'MMT/USDC',   price: 0.6500, amount: '384',   collateral: 250, txId: '0xg8i9...', discount: -12.0 },
-  { id: 'rt-9',  timeAgo: '31m ago', side: 'buy',  userAvatar: 'RS', marketType: 'Pre-market', pair: 'SKATE/USDC', price: 0.0550, amount: '4.55K',  collateral: 500, txId: '0xh9j0...', discount: -8.5 },
-  { id: 'rt-10', timeAgo: '35m ago', side: 'sell', userAvatar: 'ZK', marketType: 'Pre-market', pair: 'IKA/USDT',   price: 0.1190, amount: '2.10K',  collateral: 250, txId: '0xi0k1...', discount: -9.3 },
+  { id: 'rt-1',  timeAgo: '1m ago',  side: 'sell', isRS: false, pair: 'SKATE/USDC', baseToken: 'SKATE', price: 0.0550, amount: '3.64K',   amountToken: 'USDC', collateral: '200.00',  collateralToken: 'USDC', txId: '0xa1b2...' },
+  { id: 'rt-2',  timeAgo: '5m ago',  side: 'sell', isRS: false, pair: 'SKATE/USDC', baseToken: 'SKATE', price: 0.0550, amount: '18.18K',  amountToken: 'USDC', collateral: '1.00K',   collateralToken: 'USDC', txId: '0xa2c3...' },
+  { id: 'rt-3',  timeAgo: '9m ago',  side: 'buy',  isRS: true,  pair: 'IKA/USDT',   baseToken: 'IKA',   price: 0.1190, amount: '4.20K',   amountToken: 'USDT', collateral: '500.00',  collateralToken: 'USDT', txId: '0xb3d4...' },
+  { id: 'rt-4',  timeAgo: '12m ago', side: 'buy',  isRS: true,  pair: 'PENGU/SOL',  baseToken: 'PENGU', price: 0.0050, amount: '85.35K',  amountToken: 'SOL',  collateral: '3.00',    collateralToken: 'SOL',  txId: '0xc4e5...' },
+  { id: 'rt-5',  timeAgo: '14m ago', side: 'buy',  isRS: false, pair: 'GRASS/USDC', baseToken: 'GRASS', price: 0.0690, amount: '3.62K',   amountToken: 'USDC', collateral: '250.00',  collateralToken: 'USDC', txId: '0xd5f6...' },
+  { id: 'rt-6',  timeAgo: '16m ago', side: 'buy',  isRS: false, pair: 'SKATE/USDC', baseToken: 'SKATE', price: 0.0050, amount: '100.00K', amountToken: 'USDC', collateral: '500.00',  collateralToken: 'USDC', txId: '0xe6g7...' },
+  { id: 'rt-7',  timeAgo: '38m ago', side: 'buy',  isRS: false, pair: 'SKATE/USDC', baseToken: 'SKATE', price: 0.0050, amount: '40.00K',  amountToken: 'USDC', collateral: '200.00',  collateralToken: 'USDC', txId: '0xf7h8...' },
+  { id: 'rt-8',  timeAgo: '42m ago', side: 'buy',  isRS: false, pair: 'SKATE/USDC', baseToken: 'SKATE', price: 0.0050, amount: '100.00K', amountToken: 'USDC', collateral: '500.00',  collateralToken: 'USDC', txId: '0xg8i9...' },
+  { id: 'rt-9',  timeAgo: '1h ago',  side: 'buy',  isRS: false, pair: 'SKATE/USDC', baseToken: 'SKATE', price: 0.0613, amount: '3.62K',   amountToken: 'USDC', collateral: '0.08',    collateralToken: 'USDC', txId: '0xh9j0...' },
+  { id: 'rt-10', timeAgo: '1h ago',  side: 'buy',  isRS: false, pair: 'SKATE/USDC', baseToken: 'SKATE', price: 0.0055, amount: '1.82K',   amountToken: 'USDC', collateral: '100.00',  collateralToken: 'USDC', txId: '0xi0k1...' },
 ]
 
 export interface UpcomingListing {

@@ -771,161 +771,275 @@ const LiveMarketTable: React.FC = () => {
 }
 
 // ─── 4. Recent Trades Table ───────────────────────────────────────────────────
+// Figma node 42532:726450 — recent-trades-update
+// 7 cols: Time(128) | Side(128) | Pair(304) | Price(192) | Amount(192) | Collateral(192) | Tx.ID(192)
 
-const RecentTradesTable: React.FC = () => {
+// left_fill — Figma: nav-arrow left icon, fill=currentColor
+const LeftFillIcon: React.FC<{ size?: number; className?: string }> = ({ size = 16, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 20 20" fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+    <path d="M13.5 17L6.5 10L13.5 3V17Z" />
+  </svg>
+)
 
-  return (
-    <div className="mb-6">
+// right_fill — Figma: nav-arrow right icon, fill=currentColor
+const RightFillIcon: React.FC<{ size?: number; className?: string }> = ({ size = 16, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 20 20" fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+    <path d="M6.5 3L13.5 10L6.5 17V3Z" />
+  </svg>
+)
 
-      {/* Tab bar + controls */}
-      <div className="flex items-center justify-between border-b border-[#1b1b1c]">
-        <div className="flex items-center gap-6">
-          <span className="flex items-center gap-2 py-3 text-20 font-medium text-[#f9f9fa] whitespace-nowrap">
-            Recent Trades
-            <TabBadge count={mockHomeRecentTrades.length} active={true} />
-          </span>
-        </div>
+// arrow_right_up_fill — Figma: Tx.ID external link icon, 12×12
+const ArrowRightUpFillIcon: React.FC<{ size?: number; className?: string }> = ({ size = 12, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 12 12" fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+    <path d="M9.5 1.5H3.5V3H6.94L1.5 8.44L2.56 9.5L8 4.06V7.5H9.5V1.5Z" />
+  </svg>
+)
 
-        <div className="flex items-center gap-2 py-3">
-          <button className="px-4 py-1.5 rounded-full border border-[#252527] text-14 font-semibold text-[#f9f9fa] hover:border-[#3a3a3f] active:bg-[#252527] transition-colors whitespace-nowrap">
-            Show All
-          </button>
-          {([ChevronLeft, ChevronRight] as const).map((Icon, i) => (
-            <button
-              key={i}
-              className="w-9 h-9 rounded-full border border-[#252527] flex items-center justify-center text-[#7a7a83] hover:text-[#f9f9fa] hover:border-[#3a3a3f] active:bg-[#252527] transition-colors"
-            >
+// Token color map — for circular placeholder icons (no real images available)
+const TOKEN_COLORS: Record<string, string> = {
+  USDC:  '#2775CA',
+  USDT:  '#26A17B',
+  SOL:   '#9945FF',
+  SKATE: '#FB923C',
+  IKA:   '#60A5FA',
+  PENGU: '#22D3EE',
+  GRASS: '#22C55E',
+  LOUD:  '#EAB308',
+  MMT:   '#A855F7',
+  BONK:  '#F97316',
+  ERA:   '#F43F5E',
+}
+
+// Colored token circle — replaces real token images
+const TokenDot: React.FC<{ token: string; size?: number }> = ({ token, size = 16 }) => (
+  <div
+    className="rounded-full flex items-center justify-center text-white font-bold select-none shrink-0"
+    style={{
+      width: size,
+      height: size,
+      backgroundColor: TOKEN_COLORS[token] ?? '#252527',
+      fontSize: Math.floor(size * 0.44),
+      lineHeight: '1',
+    }}
+  >
+    {token[0]}
+  </div>
+)
+
+// SharkIcon — Figma: primary fill=#0A71CD, eye=#0A0A0B, 16×16
+const SharkIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none"
+    xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    {/* dorsal fin */}
+    <path d="M8 2.5L10 5.5H6.5L8 2.5Z" fill="#0A71CD" stroke="#0A0A0B" strokeWidth="0.35" strokeLinejoin="round" />
+    {/* body */}
+    <ellipse cx="8" cy="9" rx="6.5" ry="3" fill="#0A71CD" />
+    {/* tail fin */}
+    <path d="M1.5 9Q1 11.5 3.5 12.5Q2 10 3 9" fill="#0A71CD" />
+    {/* eye */}
+    <circle cx="12.5" cy="8.5" r="0.75" fill="#0A0A0B" />
+  </svg>
+)
+
+const RecentTradesTable: React.FC = () => (
+  // Figma: recent-trades-update — VERTICAL layout, py=16px (py-4), gap=16px (gap-4)
+  <div className="py-4 flex flex-col gap-4">
+
+    {/* ── Block title (block-title) ──────────────────────────────────────────
+        Figma: 1344×36 | HORIZONTAL | SPACE_BETWEEN | border-bottom 1px #1B1B1C
+    ───────────────────────────────────────────────────────────────────────── */}
+    <div className="flex items-center justify-between h-9 border-b border-[#1b1b1c]">
+
+      {/* Tab: "Recent Trades" 20px/500/#F9F9FA + green badge */}
+      <span className="flex items-center gap-2 text-[20px] font-[500] leading-[28px] text-[#f9f9fa]">
+        Recent Trades
+        <TabBadge count={mockHomeRecentTrades.length} active={true} />
+      </span>
+
+      {/* Buttons area: 179×36 | gap=8px */}
+      <div className="flex items-center gap-2">
+        {/* Show All — Figma: pill r=9999, border #252527, p=L16/R16/T8/B8 */}
+        <button className="flex items-center justify-center px-4 py-2 rounded-full border border-[#252527]
+                           text-[14px] font-[500] leading-[20px] text-[#f9f9fa]
+                           hover:border-[#3a3a3f] active:bg-[#252527] transition-colors whitespace-nowrap">
+          Show All
+        </button>
+
+        {/* Nav arrows — Figma: 36×36, pill r=9999, border #252527, icon-slot 20×20, fill=#F9F9FA */}
+        {([LeftFillIcon, RightFillIcon] as const).map((Icon, i) => (
+          <button
+            key={i}
+            className="w-9 h-9 rounded-full border border-[#252527] flex items-center justify-center
+                       text-[#f9f9fa] hover:border-[#3a3a3f] active:bg-[#252527] transition-colors"
+            style={{ boxSizing: 'border-box' }}
+            aria-label={i === 0 ? 'Previous' : 'Next'}
+          >
+            <span className="w-5 h-5 flex items-center justify-center p-0.5">
               <Icon size={16} />
-            </button>
-          ))}
-        </div>
+            </span>
+          </button>
+        ))}
       </div>
+    </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full" style={{ minWidth: 1120 }}>
-          <thead>
-            <tr className="border-b border-[#1b1b1c]">
-              {[
-                { label: 'Time',        w: 128 },
-                { label: 'Side',        w: 128 },
-                { label: 'Market Type', w: 182 },
-                { label: 'Pair',        w: 304 },
-                { label: 'Price ($)',   w: 192 },
-                { label: 'Amount',      w: 192 },
-                { label: 'Collateral',  w: 192 },
-                { label: 'Tx.ID',       w: 192 },
-              ].map(col => (
-                <th
-                  key={col.label}
-                  style={{ width: col.w, minWidth: col.w }}
-                  className="py-2 pl-4 pr-0 text-12 font-medium text-[#7a7a83] text-left whitespace-nowrap"
-                >
-                  {col.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {mockHomeRecentTrades.map((trade: HomeRecentTrade) => (
-              <tr
-                key={trade.id}
-                className="border-b border-[#1b1b1c] hover:bg-[rgba(255,255,255,0.02)] transition-colors group h-[60px]"
+    {/* ── Table (open-offers-list) ───────────────────────────────────────────
+        Figma: 1344×684 | table-heading(36) + recent-trade-list(600, 10×60px rows)
+        Column widths: Time(128) Side(128) Pair(304) Price(192) Amount(192) Collateral(192) Tx.ID(192)
+    ───────────────────────────────────────────────────────────────────────── */}
+    <div className="overflow-x-auto">
+      <table className="w-full table-fixed" style={{ minWidth: 1328 }}>
+        <colgroup>
+          <col style={{ width: 128 }} />   {/* Time */}
+          <col style={{ width: 128 }} />   {/* Side */}
+          <col style={{ width: 304 }} />   {/* Pair */}
+          <col style={{ width: 192 }} />   {/* Price ($) */}
+          <col style={{ width: 192 }} />   {/* Amount */}
+          <col style={{ width: 192 }} />   {/* Collateral */}
+          <col style={{ width: 192 }} />   {/* Tx.ID */}
+        </colgroup>
+
+        {/* ── Table heading — Figma: 1344×36 | px=8 | border-bottom #1B1B1C ── */}
+        <thead>
+          <tr className="border-b border-[#1b1b1c]">
+            {/* Left-aligned: Time, Side, Pair | Right-aligned: Price, Amount, Collateral, Tx.ID */}
+            {[
+              { label: 'Time',       align: 'left'  },
+              { label: 'Side',       align: 'left'  },
+              { label: 'Pair',       align: 'left'  },
+              { label: 'Price ($)',  align: 'right' },
+              { label: 'Amount',     align: 'right' },
+              { label: 'Collateral', align: 'right' },
+              { label: 'Tx.ID',      align: 'right' },
+            ].map(col => (
+              <th
+                key={col.label}
+                className={clsx(
+                  'px-2 py-2 text-[12px] font-[400] leading-[16px] text-[#7a7a83] whitespace-nowrap',
+                  col.align === 'right' ? 'text-right' : 'text-left',
+                )}
               >
-                {/* Time */}
-                <td className="pl-4 pr-0 py-4">
-                  <span className="text-14 font-normal text-[#7a7a83] whitespace-nowrap">{trade.timeAgo}</span>
-                </td>
+                {col.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
 
-                {/* Side */}
-                <td className="pl-4 pr-0 py-4">
-                  <div className="flex items-center gap-2">
-                    <span className={clsx(
-                      'text-14 font-semibold',
-                      trade.side === 'buy' ? 'text-[#5bd197]' : 'text-[#fd5e67]',
-                    )}>
-                      {trade.side === 'buy' ? 'Buy' : 'Sell'}
-                    </span>
-                    <span className="w-[22px] h-[22px] rounded-full bg-[#eab308]/10 inline-flex items-center justify-center text-10 font-semibold text-[#eab308] shrink-0">
-                      {trade.userAvatar}
-                    </span>
-                  </div>
-                </td>
+        {/* ── Trade rows — Figma: recent-trade-item 1344×60 each ────────────
+            Row: px=8, py=16 per cell, border-bottom #1B1B1C
+        ─────────────────────────────────────────────────────────────────── */}
+        <tbody>
+          {mockHomeRecentTrades.map((trade: HomeRecentTrade) => (
+            <tr
+              key={trade.id}
+              className="border-b border-[#1b1b1c] hover:bg-[rgba(255,255,255,0.02)] transition-colors h-[60px]"
+            >
 
-                {/* Market Type */}
-                <td className="pl-4 pr-0 py-4">
-                  <span className="text-14 font-semibold text-[#f9f9fa]">{trade.marketType}</span>
-                </td>
+              {/* ── Col 0: Time — 14px/400/#7A7A83 ── */}
+              <td className="px-2 py-4">
+                <span className="text-[14px] font-[400] leading-[20px] text-[#7a7a83] whitespace-nowrap">
+                  {trade.timeAgo}
+                </span>
+              </td>
 
-                {/* Pair */}
-                <td className="pl-4 pr-0 py-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-[#252527] flex items-center justify-center shrink-0">
-                      <span className="text-[9px] font-semibold text-[#7a7a83]">◆</span>
-                    </div>
-                    <span className="text-14 font-semibold text-[#f9f9fa]">{trade.pair}</span>
-                  </div>
-                </td>
-
-                {/* Price */}
-                <td className="pl-4 pr-0 py-4">
-                  <span className="text-14 font-semibold text-[#f9f9fa] tabular-nums">
-                    {fmtPrice(trade.price)}
+              {/* ── Col 1: Side — "Buy/Sell" 14px/500 + optional RS pill badge ── */}
+              {/* Figma: RS badge 26×20, pill r=9999, bg=#EAB308, text=#0A0A0B, 10px/500 */}
+              <td className="px-2 py-4">
+                <div className="flex items-center gap-2">
+                  <span className={clsx(
+                    'text-[14px] font-[500] leading-[20px]',
+                    trade.side === 'buy' ? 'text-[#5bd197]' : 'text-[#fd5e67]',
+                  )}>
+                    {trade.side === 'buy' ? 'Buy' : 'Sell'}
                   </span>
-                </td>
+                  {trade.isRS && (
+                    <span className="inline-flex items-center justify-center px-2 py-1 rounded-full
+                                     bg-[#eab308] text-[#0a0a0b] text-[10px] font-[500] leading-[12px] shrink-0
+                                     whitespace-nowrap">
+                      RS
+                    </span>
+                  )}
+                </div>
+              </td>
 
-                {/* Amount */}
-                <td className="pl-4 pr-0 py-4">
-                  <div className="flex items-center gap-2">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-14 font-semibold text-[#f9f9fa] tabular-nums">{trade.amount}</span>
-                      <span className="text-12 font-semibold text-[#5bd197] tabular-nums">{trade.collateral.toFixed(2)}</span>
-                    </div>
-                    <div className="w-4 h-4 rounded-full bg-[#252527] flex items-center justify-center shrink-0">
-                      <span className="text-[8px] font-bold text-[#f9f9fa]">$</span>
-                    </div>
-                  </div>
-                </td>
+              {/* ── Col 2: Pair — icon-slot 20×20 (p=2→16×16 circle) + pair name 14px/500/#F9F9FA ── */}
+              <td className="px-2 py-4">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 flex items-center justify-center p-0.5 shrink-0">
+                    <TokenDot token={trade.baseToken} size={16} />
+                  </span>
+                  <span className="text-[14px] font-[500] leading-[20px] text-[#f9f9fa] whitespace-nowrap">
+                    {trade.pair}
+                  </span>
+                </div>
+              </td>
 
-                {/* Collateral */}
-                <td className="pl-4 pr-0 py-4">
-                  <div className="flex items-center gap-2">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-14 font-semibold text-[#f9f9fa] tabular-nums">{trade.collateral.toFixed(2)}</span>
-                      <span className={clsx(
-                        'text-12 font-semibold tabular-nums',
-                        trade.discount >= 0 ? 'text-[#5bd197]' : 'text-[#5bd197]',
-                      )}>
-                        {trade.discount > 0 ? '+' : ''}{trade.discount.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="w-4 h-4 rounded-full bg-[#252527] flex items-center justify-center shrink-0">
-                      <span className="text-[8px] font-bold text-[#f9f9fa]">$</span>
-                    </div>
-                    <span className="text-14 shrink-0">🦈</span>
-                  </div>
-                </td>
+              {/* ── Col 3: Price ($) — right-aligned, 14px/500/#F9F9FA ── */}
+              <td className="px-2 py-4 text-right">
+                <span className="text-[14px] font-[500] leading-[20px] text-[#f9f9fa] tabular-nums">
+                  {fmtPrice(trade.price)}
+                </span>
+              </td>
 
-                {/* Tx.ID */}
-                <td className="pl-4 pr-0 py-4">
+              {/* ── Col 4: Amount — right-aligned, amount text + token circle 16×16 ── */}
+              {/* Figma: HORIZONTAL, primaryAxisAlignItems=MAX, gap=8px */}
+              <td className="px-2 py-4">
+                <div className="flex items-center justify-end gap-2">
+                  <span className="text-[14px] font-[500] leading-[20px] text-[#f9f9fa] tabular-nums whitespace-nowrap">
+                    {trade.amount}
+                  </span>
+                  {/* image-slot 16×16, token image fill, radius=9999 */}
+                  <TokenDot token={trade.amountToken} size={16} />
+                </div>
+              </td>
+
+              {/* ── Col 5: Collateral — right-aligned, amount + token-slot + shark-slot ── */}
+              {/* Figma: HORIZONTAL, primaryAxisAlignItems=MAX, gap=8px */}
+              <td className="px-2 py-4">
+                <div className="flex items-center justify-end gap-2">
+                  <span className="text-[14px] font-[500] leading-[20px] text-[#f9f9fa] tabular-nums whitespace-nowrap">
+                    {trade.collateral}
+                  </span>
+                  {/* collateral token icon-slot: 20×20, p=2 → 16×16 rounded-full */}
+                  <span className="w-5 h-5 flex items-center justify-center p-0.5 shrink-0">
+                    <TokenDot token={trade.collateralToken} size={16} />
+                  </span>
+                  {/* shark icon-slot: 20×20, p=2 → 16×16, #0A71CD fill */}
+                  <span className="w-5 h-5 flex items-center justify-center p-0.5 shrink-0">
+                    <SharkIcon size={16} />
+                  </span>
+                </div>
+              </td>
+
+              {/* ── Col 6: Tx.ID — right-aligned, external link button 52×28 r=6 ── */}
+              {/* Figma: border #252527, r=6px, icon-slot 16×16 → arrow_right_up_fill 12×12, fill=#F9F9FA */}
+              <td className="px-2 py-4">
+                <div className="flex items-center justify-end">
                   <button
                     onClick={e => e.stopPropagation()}
-                    className="w-[52px] h-7 border border-[#252527] rounded-md flex items-center justify-center text-[#7a7a83] hover:text-[#f9f9fa] hover:border-[#3a3a3f] active:bg-[#252527] transition-colors"
+                    className="w-[52px] h-7 border border-[#252527] rounded-[6px] flex items-center justify-center
+                               text-[#f9f9fa] hover:border-[#3a3a3f] hover:bg-[#252527] active:bg-[#2e2e34]
+                               transition-colors"
+                    style={{ boxSizing: 'border-box' }}
                     aria-label="View transaction"
                   >
-                    <ArrowUpRight size={14} />
+                    {/* icon-slot: 16×16, p=2px → 12×12 icon */}
+                    <span className="w-4 h-4 flex items-center justify-center p-0.5">
+                      <ArrowRightUpFillIcon size={12} />
+                    </span>
                   </button>
-                </td>
+                </div>
+              </td>
 
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
-  )
-}
+  </div>
+)
 
 // ─── 5. Bottom Stats Bar ──────────────────────────────────────────────────────
 
