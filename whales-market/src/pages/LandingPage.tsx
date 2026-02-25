@@ -16,6 +16,11 @@ import tokenGrassImg   from '@/assets/images/token-grass.png'
 import tokenLoudImg    from '@/assets/images/token-loud.png'
 import tokenMmtImg     from '@/assets/images/token-mmt.png'
 import tokenZbtImg     from '@/assets/images/token-zbt.png'
+import investor1Img    from '@/assets/images/investor1.png'
+import investor2Img    from '@/assets/images/investor2.png'
+import investor3Img    from '@/assets/images/investor3.png'
+import investor4Img    from '@/assets/images/investor4.png'
+import investor5Img    from '@/assets/images/investor5.png'
 import { clsx } from 'clsx'
 import { PageWrapper } from '@/components/layout/PageWrapper'
 import {
@@ -78,6 +83,9 @@ const TOKEN_LOGOS: Record<string, string> = {
   MMT:   tokenMmtImg,
   ZBT:   tokenZbtImg,
 }
+
+// Investor avatar images — cycle through for Upcoming tab Investors & Backers column
+const INVESTOR_IMAGES = [investor1Img, investor2Img, investor3Img, investor4Img, investor5Img]
 const NetworkBadge: React.FC<{ network: HomeMarket['network'] }> = ({ network }) => {
   const logo = CHAIN_LOGOS[network]
   return (
@@ -575,10 +583,12 @@ const UpcomingTabContent: React.FC<{ loading: boolean }> = ({ loading }) => {
                   {listing.investorAvatars.length > 0 ? (
                     <div className="flex items-center">
                       {listing.investorAvatars.slice(0, 5).map((_, i) => (
-                        <div
+                        <img
                           key={i}
-                          className="w-5 h-5 rounded-full bg-gradient-to-br from-[#3a3a3f] to-[#252527] border-2 border-[#0a0a0b]"
-                          style={{ marginLeft: i > 0 ? '-6px' : 0, zIndex: 5 - i }}
+                          src={INVESTOR_IMAGES[i % INVESTOR_IMAGES.length]}
+                          alt=""
+                          className="w-5 h-5 rounded-full object-cover border-2 border-[#0a0a0b]"
+                          style={{ marginLeft: i > 0 ? '-6px' : 0, zIndex: 5 - i, position: 'relative' }}
                         />
                       ))}
                       {listing.investorOverflow > 0 && (
@@ -592,18 +602,18 @@ const UpcomingTabContent: React.FC<{ loading: boolean }> = ({ loading }) => {
                   )}
                 </td>
 
-                {/* ── Narrative — pill badges ── */}
+                {/* ── Narrative — pill badges, max 2 shown + overflow count ── */}
                 <td className="pl-3 pr-2 py-4">
                   {listing.narratives.length > 0 ? (
                     <div className="flex items-center gap-1 flex-wrap">
-                      {listing.narratives.map(tag => (
-                        <span key={tag} className="px-2 py-1 rounded-full bg-[#1b1b1c] text-[10px] font-medium text-text-primary leading-none">
+                      {listing.narratives.slice(0, 2).map(tag => (
+                        <span key={tag} className="px-2 py-1 rounded-full bg-[#1b1b1c] text-[10px] font-medium text-text-primary leading-none uppercase">
                           {tag}
                         </span>
                       ))}
-                      {listing.narrativeOverflow > 0 && (
+                      {listing.narratives.length > 2 && (
                         <span className="px-2 py-1 rounded-full bg-[#1b1b1c] text-[10px] font-medium text-text-primary leading-none">
-                          +{listing.narrativeOverflow}
+                          +{listing.narratives.length - 2}
                         </span>
                       )}
                     </div>
@@ -612,13 +622,13 @@ const UpcomingTabContent: React.FC<{ loading: boolean }> = ({ loading }) => {
                   )}
                 </td>
 
-                {/* ── Moni Score — bar + number ── */}
+                {/* ── Moni Score — gradient bar (same as Altcoin Season card) + number ── */}
                 <td className="pl-3 pr-2 py-4">
                   <div className="flex items-center gap-2">
                     <div className="relative w-[120px] h-1 bg-[#252527] rounded-full shrink-0">
                       <div
-                        className="absolute top-0 left-0 h-1 bg-[#5bd197] rounded-full"
-                        style={{ width: `${listing.moniPct}%` }}
+                        className="absolute top-0 left-0 h-1 rounded-full"
+                        style={{ width: `${listing.moniPct}%`, background: 'linear-gradient(to right, #F9F9FA 1%, #16C284 100%)' }}
                       />
                       <div
                         className="absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-[#f9f9fa] rounded-full"
@@ -1089,15 +1099,7 @@ const RecentTradesTable: React.FC = () => (
         Total=1328 → converted to % so table always fits container with no horizontal scroll
     ───────────────────────────────────────────────────────────────────────── */}
     <table className="w-full table-fixed">
-      <colgroup>
-        <col style={{ width: '9.64%' }}  />  {/* Time      128/1328 */}
-        <col style={{ width: '9.64%' }}  />  {/* Side      128/1328 */}
-        <col style={{ width: '22.89%' }} />  {/* Pair      304/1328 */}
-        <col style={{ width: '14.46%' }} />  {/* Price ($) 192/1328 */}
-        <col style={{ width: '14.46%' }} />  {/* Amount    192/1328 */}
-        <col style={{ width: '14.46%' }} />  {/* Collateral 192/1328 */}
-        <col style={{ width: '14.46%' }} />  {/* Tx.ID     192/1328 */}
-      </colgroup>
+      <colgroup><col style={{ width: '9.64%' }} /><col style={{ width: '9.64%' }} /><col style={{ width: '22.89%' }} /><col style={{ width: '14.46%' }} /><col style={{ width: '14.46%' }} /><col style={{ width: '14.46%' }} /><col style={{ width: '14.46%' }} /></colgroup>
 
         {/* ── Table heading — Figma: 1344×36 | px=8 | border-bottom #1B1B1C ── */}
         <thead>
