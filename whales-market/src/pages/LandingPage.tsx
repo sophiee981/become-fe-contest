@@ -24,7 +24,7 @@ import investor5Img    from '@/assets/images/investor5.png'
 import { clsx } from 'clsx'
 import { PageWrapper } from '@/components/layout/PageWrapper'
 import {
-  mockHomeMarkets, mockHomeRecentTrades, mockUpcomingListings,
+  mockHomeMarkets, mockHomeRecentTrades, mockUpcomingListings, mockEndedMarkets,
   HOME_STATS, METRICS,
   type HomeMarket, type HomeRecentTrade, type UpcomingListing,
 } from '@/mock-data/homeData'
@@ -647,6 +647,160 @@ const UpcomingTabContent: React.FC<{ loading: boolean }> = ({ loading }) => {
   )
 }
 
+// ─── Ended Tab Content ─────────────────────────────────────────────────────
+// Figma node 42540-728736 — same 6-column layout as Live Market table
+// Columns: Token(22%) | Last Price(15%) | 24h Vol(15%) | Total Vol(16%) | Implied FDV(16%) | Settle Time(16%)
+// Settle Time shows settled date + "ENDED" pill badge
+
+type EndedSortKey = 'price' | 'vol24h' | 'totalVol' | 'fdv' | 'priceChange24h'
+
+const EndedSkeletonRow: React.FC = () => (
+  <tr className="border-b border-border-subtle animate-pulse">
+    <td className="pl-2 pr-2 py-4"><div className="flex items-center gap-3"><div className="w-11 h-11 rounded-full bg-[#252527]" /><div className="space-y-2"><div className="h-4 w-16 bg-[#252527] rounded" /><div className="h-3 w-24 bg-[#1b1b1c] rounded" /></div></div></td>
+    <td className="pl-4 pr-2 py-3 text-right"><div className="flex flex-col gap-1 items-end"><div className="h-4 w-16 bg-[#252527] rounded" /><div className="h-3 w-12 bg-[#1b1b1c] rounded" /></div></td>
+    <td className="pl-4 pr-2 py-3 text-right"><div className="flex flex-col gap-1 items-end"><div className="h-4 w-12 bg-[#252527] rounded" /><div className="h-3 w-10 bg-[#1b1b1c] rounded" /></div></td>
+    <td className="pl-4 pr-2 py-3 text-right"><div className="flex flex-col gap-1 items-end"><div className="h-4 w-14 bg-[#252527] rounded" /><div className="h-3 w-10 bg-[#1b1b1c] rounded" /></div></td>
+    <td className="pl-4 pr-2 py-3 text-right"><div className="h-4 w-12 bg-[#252527] rounded ml-auto" /></td>
+    <td className="pl-4 pr-2 py-3 text-right"><div className="flex flex-col gap-1 items-end"><div className="h-4 w-16 bg-[#252527] rounded" /><div className="h-5 w-14 bg-[#252527] rounded-full" /></div></td>
+  </tr>
+)
+
+const EndedTabContent: React.FC<{ loading: boolean }> = ({ loading }) => {
+  const navigate = useNavigate()
+  const [sortKey, setSortKey] = useState<EndedSortKey>('totalVol')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+
+  const handleEndedSort = (field: EndedSortKey) => {
+    if (sortKey === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(field); setSortDir('desc') }
+  }
+
+  const sorted = useMemo(() =>
+    [...mockEndedMarkets].sort((a, b) => {
+      const dir = sortDir === 'asc' ? 1 : -1
+      return (a[sortKey] > b[sortKey] ? 1 : -1) * dir
+    }),
+    [sortKey, sortDir]
+  )
+
+  const ENDED_COLS: { label: string; field: EndedSortKey | null; w: string }[] = [
+    { label: 'Token',            field: null,              w: '22%' },
+    { label: 'Last Price ($)',    field: 'price',           w: '15%' },
+    { label: '24h Vol. ($)',      field: 'vol24h',          w: '15%' },
+    { label: 'Total Vol. ($)',    field: 'totalVol',        w: '16%' },
+    { label: 'Implied FDV ($)',   field: 'fdv',             w: '16%' },
+    { label: 'Settle Time (UTC)', field: null,              w: '16%' },
+  ]
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full table-fixed min-w-[700px]">
+        <thead>
+          <tr className="border-b border-border-subtle">
+            {ENDED_COLS.map((col, idx) => (
+              <th
+                key={col.label}
+                style={{ width: col.w }}
+                onClick={() => col.field && handleEndedSort(col.field)}
+                className={clsx(
+                  'py-2 pr-2 text-12 font-normal text-text-muted whitespace-nowrap',
+                  idx === 0 ? 'pl-2 text-left' : 'pl-4 text-right',
+                  col.field && 'cursor-pointer hover:text-text-primary transition-colors select-none',
+                )}
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  {col.label}
+                  {col.field && (
+                    <TableSortIcon field={col.field} sortKey={sortKey} sortDir={sortDir} />
+                  )}
+                </span>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {loading ? (
+            Array.from({ length: 6 }).map((_, i) => <EndedSkeletonRow key={i} />)
+          ) : (
+            sorted.map(market => (
+              <tr
+                key={market.id}
+                onClick={() => navigate(`/market/${market.id}`)}
+                className="border-b border-border-subtle hover:bg-white/[0.02] transition-colors cursor-pointer group"
+              >
+                {/* ── Token cell ── */}
+                <td className="pl-2 pr-2 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="relative shrink-0 w-11 h-11 flex items-center justify-center">
+                      <div className="w-9 h-9 rounded-full bg-bg-elevated flex items-center justify-center text-lg select-none overflow-hidden">
+                        {TOKEN_LOGOS[market.token] ? (
+                          <img src={TOKEN_LOGOS[market.token]} alt={market.token} className="w-full h-full object-cover rounded-full" />
+                        ) : (
+                          market.logo
+                        )}
+                      </div>
+                      <NetworkBadge network={market.network} />
+                    </div>
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <span className="text-14 font-medium text-text-primary group-hover:text-accent transition-colors truncate">
+                        {market.token}
+                      </span>
+                      <span className="text-14 font-normal text-text-muted truncate">{market.tokenName}</span>
+                    </div>
+                  </div>
+                </td>
+
+                {/* ── Last Price ($) ── */}
+                <td className="pl-4 pr-2 py-3 text-right">
+                  <div className="flex flex-col gap-1 items-end">
+                    <span className="text-14 font-medium text-text-primary tabular-nums">${fmtPrice(market.price)}</span>
+                    <ChangeTag value={market.priceChange24h} />
+                  </div>
+                </td>
+
+                {/* ── 24h Vol. ($) — ended markets show 0 / no change ── */}
+                <td className="pl-4 pr-2 py-3 text-right">
+                  <div className="flex flex-col gap-1 items-end">
+                    <span className="text-14 font-medium text-text-primary tabular-nums">{fmtVol(market.vol24h)}</span>
+                    <ChangeTag value={market.vol24hChange} />
+                  </div>
+                </td>
+
+                {/* ── Total Vol. ($) ── */}
+                <td className="pl-4 pr-2 py-3 text-right">
+                  <div className="flex flex-col gap-1 items-end">
+                    <span className="text-14 font-medium text-text-primary tabular-nums">{fmtVol(market.totalVol)}</span>
+                    <ChangeTag value={market.totalVolChange} />
+                  </div>
+                </td>
+
+                {/* ── Implied FDV ($) ── */}
+                <td className="pl-4 pr-2 py-3 text-right align-top">
+                  <span className="text-14 font-medium text-text-primary tabular-nums">
+                    {market.fdv.toFixed(2)}M
+                  </span>
+                </td>
+
+                {/* ── Settle Time (UTC) — show date + "ENDED" pill ── */}
+                <td className="pl-4 pr-2 py-3 text-right">
+                  <div className="flex flex-col gap-1 items-end">
+                    <span className="text-14 font-medium text-text-primary tabular-nums">
+                      {market.settleDisplay}
+                    </span>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-10 font-medium bg-[#7a7a83]/10 text-[#7a7a83] w-fit">
+                      ENDED
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 const LiveMarketTable: React.FC = () => {
   const navigate = useNavigate()
   const [tab, setTab]           = useState<'live' | 'upcoming' | 'ended'>('live')
@@ -836,6 +990,8 @@ const LiveMarketTable: React.FC = () => {
       {/* ── Tab content ─────────────────────────────────────────────────────── */}
       {tab === 'upcoming' ? (
         <UpcomingTabContent loading={tabLoading} />
+      ) : tab === 'ended' ? (
+        <EndedTabContent loading={tabLoading} />
       ) : (
       <div className="overflow-x-auto">
         <table className="w-full table-fixed min-w-[700px]">
