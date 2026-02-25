@@ -35,7 +35,7 @@ const Breadcrumb: React.FC = () => (
       </span>
       <span className="text-12 text-text-primary">SKATE</span>
     </nav>
-    <button className="flex items-center gap-1 text-12 font-medium text-status-success hover:text-status-success/80 transition-colors">
+    <button className="flex items-center gap-1 text-12 font-medium text-success hover:text-success/80 transition-colors">
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
         <path d="M3 9L9 3M9 3H4.5M9 3V7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
@@ -45,111 +45,157 @@ const Breadcrumb: React.FC = () => (
 )
 
 // ─── Market Header (Figma node 37222:132669) ───
-// 1344x96, py-24, gap-16, HORIZONTAL, border-bottom #1b1b1c
-// Left: token-info (696x48) = token(120) + price(75) + stats(365), gap-32
-// Right: buttons (632x48)
+// 1344x96, HORIZONTAL, gap-16, py-24, border-bottom 1px #1B1B1C
+// Left: token-info (flex-1, 696x48, gap-32) = token(120) + price(75) + stats(365)
+// Right: buttons (632x48, gap-16) = social(489x36, gap-8) + divider + CTA(119x36)
 const MarketHeader: React.FC = () => (
-  <div className="flex items-center justify-between py-6 border-b border-border-subtle">
-    {/* token-info: gap-32 */}
-    <div className="flex items-center gap-8">
-      {/* token: 120x48, gap-8 */}
+  <div className="flex items-center gap-4 py-6 border-b border-border-subtle">
+    {/* token-info: flex-1, gap-32 */}
+    <div className="flex-1 flex items-center gap-8">
+      {/* token: 120x48, gap-8 — icon 36x36 circle + chain badge 16x16 */}
       <div className="flex items-center gap-2">
-        <div className="relative w-[44px] h-[44px]">
+        <div className="relative w-[44px] h-[44px] flex items-center justify-center">
           <img src={skateImg} alt="SKATE" className="w-9 h-9 rounded-full" />
           <img
             src={chainSolanaImg}
             alt="Solana"
-            className="absolute -bottom-0.5 -left-0.5 w-4 h-4 rounded border-2 border-bg-base"
+            className="absolute bottom-0 left-0 w-4 h-4 rounded-sm border-2 border-bg-base"
           />
         </div>
         <div className="flex flex-col">
-          {/* ticker: 18/500/#F9F9FA */}
-          <span className="text-18 font-medium text-text-primary leading-7">SKATE</span>
-          {/* subtitle: 12/400/#7A7A83 */}
-          <span className="text-12 text-text-muted">Skate Chain</span>
+          {/* ticker: Inter 18/500/28px #F9F9FA */}
+          <span className="text-18 font-medium text-text-primary">SKATE</span>
+          {/* subtitle: Inter 12/400/16px #7A7A83, wrapped py-0.5 */}
+          <div className="py-0.5">
+            <span className="text-12 text-text-muted whitespace-nowrap">Skate Chain</span>
+          </div>
         </div>
       </div>
 
       {/* price: 75x48 */}
       <div className="flex flex-col">
-        <span className="text-18 font-medium text-text-primary leading-7">$0.0045</span>
-        <span className="text-12 text-status-success">+0.13%</span>
+        {/* price value: Inter 18/500/28px #F9F9FA */}
+        <span className="text-18 font-medium text-text-primary">$0.0045</span>
+        {/* change: Inter 12/400/16px #5BD197 */}
+        <div className="py-0.5">
+          <span className="text-12 text-success">+0.13%</span>
+        </div>
       </div>
 
-      {/* stats: gap-32 */}
+      {/* stats: gap-32 — 3 stat items */}
       <div className="flex items-center gap-8">
-        {/* stat-item: 24h Vol */}
+        {/* stat-item: 24h Vol — 146x48 */}
         <div className="flex flex-col">
-          <span className="text-12 text-text-muted leading-7">24h Vol.</span>
-          <div className="flex items-center gap-1">
+          <div className="py-1.5">
+            <span className="text-12 text-text-muted border-b border-dashed border-border-default pb-px cursor-help">
+              24h Vol.
+            </span>
+          </div>
+          <div className="flex items-center gap-1 py-0.5">
             <span className="text-12 text-text-primary">$16,389.76</span>
-            <span className="text-12 text-status-success">+1,159.36%</span>
+            <span className="text-12 text-success">+1,159.36%</span>
           </div>
         </div>
-        {/* stat-item: Total Vol */}
+
+        {/* stat-item: Total Vol — 69x48 */}
         <div className="flex flex-col">
-          <span className="text-12 text-text-muted leading-7">Total Vol.</span>
-          <span className="text-12 text-text-primary">$38,581.28</span>
+          <div className="py-1.5">
+            <span className="text-12 text-text-muted border-b border-dashed border-border-default pb-px cursor-help">
+              Total Vol.
+            </span>
+          </div>
+          <div className="py-0.5">
+            <span className="text-12 text-text-primary">$38,581.28</span>
+          </div>
         </div>
-        {/* stat-item: Countdown */}
+
+        {/* stat-item: Countdown — 86x48 */}
         <div className="flex flex-col">
-          <span className="text-12 text-text-muted leading-7">Countdown</span>
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-status-info/20 text-10 font-medium text-status-info">
+          <div className="py-1.5">
+            <span className="text-12 text-text-muted border-b border-dashed border-border-default pb-px cursor-help">
+              Countdown
+            </span>
+          </div>
+          {/* whales-badge: pill, bg info-500@10%, text info-400, 10/500/12px, UPPERCASE */}
+          <span className="inline-flex items-center self-start px-2 py-1 rounded-full bg-info-scale-500/10 text-10 font-medium text-info uppercase">
             not started
           </span>
         </div>
       </div>
     </div>
 
-    {/* buttons: gap-12 */}
-    <div className="flex items-center gap-3">
-      {/* About Skate + dropdown icon */}
-      <div className="flex items-center border border-border-default rounded-lg overflow-hidden">
-        <button className="flex items-center gap-1.5 px-3 h-9 text-14 font-medium text-text-primary hover:bg-bg-hover transition-colors">
-          About Skate
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M6 8L10 12L14 8" stroke="#7A7A83" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
-        <button className="flex items-center justify-center w-9 h-9 border-l border-border-default hover:bg-bg-hover transition-colors">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M10 4V16M4 10H16" stroke="#F9F9FA" strokeWidth="1.5" strokeLinecap="round"/>
+    {/* buttons: gap-16 → social(gap-8) + divider + CTA, flex-shrink-0 prevents squeezing */}
+    <div className="flex items-center gap-4 flex-shrink-0">
+      {/* social action buttons: 489x36, gap-8 */}
+      <div className="flex items-center gap-2">
+        {/* About Skate group: 168x36, border #252527, radius 8 */}
+        <div className="flex items-center border border-neutral-800 rounded-lg overflow-hidden">
+          {/* Button A: "About Skate" + arrow_right_up icon — 132x36, pl-16 pr-8 py-8, gap-6 */}
+          <button className="flex items-center gap-1.5 h-9 pl-4 pr-2 text-14 font-medium text-text-primary hover:bg-bg-hover transition-colors whitespace-nowrap">
+            About Skate
+            <span className="w-5 h-5 flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M6 4H12V10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 4L4 12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </span>
+          </button>
+          {/* Divider inside group */}
+          <div className="w-px self-stretch bg-neutral-800" />
+          {/* Button B: chevron down — 36x36, p-8 */}
+          <button className="flex items-center justify-center w-9 h-9 hover:bg-bg-hover transition-colors">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M4 6L8 10L12 6" stroke="#F9F9FA" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Airdrop Checker: 160x36, gradient border #86ddb1→#15af77, pl-8 pr-16 py-8, gap-6 */}
+        {/* Gradient border technique: p-[1px] wrapper + inner button with bg-bg-base */}
+        <div className="h-9 p-[1px] rounded-lg bg-gradient-to-r from-[#86ddb1] to-[#15af77] flex-shrink-0">
+          <button className="flex items-center gap-1.5 h-full pl-2 pr-4 rounded-[7px] bg-bg-base text-14 font-medium hover:bg-bg-hover transition-colors">
+            <span className="w-5 h-5 flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 2C4.69 2 2 5.13 2 9H6M8 2C11.31 2 14 5.13 14 9H10M8 2V9M8 14C6.9 14 6 13.1 6 12V9" stroke="#5BD197" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </span>
+            <span className="bg-gradient-to-r from-primary-300 to-primary-500 bg-clip-text text-transparent whitespace-nowrap">
+              Airdrop Checker
+            </span>
+          </button>
+        </div>
+
+        {/* Earn 50% Fee: 145x36, gradient border #cdba35→#ef9632, pl-8 pr-16 py-8, gap-6 */}
+        {/* Gradient border technique: p-[1px] wrapper + inner button with bg-bg-base */}
+        <div className="h-9 p-[1px] rounded-lg bg-gradient-to-r from-[#cdba35] to-[#ef9632] flex-shrink-0">
+          <button className="flex items-center gap-1.5 h-full pl-2 pr-4 rounded-[7px] bg-bg-base text-14 font-medium hover:bg-bg-hover transition-colors">
+            <span className="w-5 h-5 flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M13 5.5C13 3.567 10.761 2 8 2C5.239 2 3 3.567 3 5.5C3 7.433 5.239 9 8 9C10.761 9 13 7.433 13 5.5Z" stroke="#D2B535" strokeWidth="1.2"/>
+                <path d="M3 5.5V10.5C3 12.433 5.239 14 8 14C10.761 14 13 12.433 13 10.5V5.5" stroke="#D2B535" strokeWidth="1.2"/>
+              </svg>
+            </span>
+            <span className="bg-gradient-to-r from-[#ff8731] to-[#bfc736] bg-clip-text text-transparent whitespace-nowrap">
+              Earn 50% Fee
+            </span>
+          </button>
+        </div>
+
+        {/* More: 36x36, bg #1B1B1C, radius 8 */}
+        <button className="flex items-center justify-center w-9 h-9 rounded-lg bg-bg-surface hover:bg-bg-hover transition-colors">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="4" cy="8" r="1.25" fill="#F9F9FA"/>
+            <circle cx="8" cy="8" r="1.25" fill="#F9F9FA"/>
+            <circle cx="12" cy="8" r="1.25" fill="#F9F9FA"/>
           </svg>
         </button>
       </div>
 
-      {/* Airdrop Checker */}
-      <button className="flex items-center gap-1.5 px-3 h-9 rounded-lg border border-border-default text-14 font-medium text-text-primary hover:bg-bg-hover transition-colors">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M8 2C4.69 2 2 4.69 2 8C2 11.31 4.69 14 8 14C11.31 14 14 11.31 14 8" stroke="#F9F9FA" strokeWidth="1.2" strokeLinecap="round"/>
-          <path d="M8 6V8.5L10 10" stroke="#F9F9FA" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-        Airdrop Checker
-      </button>
+      {/* Vertical divider: 0x18, stroke 1px #252527 */}
+      <div className="w-px h-[18px] bg-neutral-800" />
 
-      {/* Earn 50% Fee */}
-      <button className="flex items-center gap-1.5 px-3 h-9 rounded-lg border border-border-default text-14 font-medium text-text-primary hover:bg-bg-hover transition-colors">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M13 5.5C13 3.567 10.761 2 8 2C5.239 2 3 3.567 3 5.5C3 7.433 5.239 9 8 9C10.761 9 13 7.433 13 5.5Z" stroke="#F9F9FA" strokeWidth="1.2"/>
-          <path d="M3 5.5V10.5C3 12.433 5.239 14 8 14C10.761 14 13 12.433 13 10.5V5.5" stroke="#F9F9FA" strokeWidth="1.2"/>
-        </svg>
-        Earn 50% Fee
-      </button>
-
-      {/* More icon */}
-      <button className="flex items-center justify-center w-9 h-9 rounded-lg bg-bg-surface hover:bg-bg-hover transition-colors">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <circle cx="4" cy="8" r="1.5" fill="#F9F9FA"/>
-          <circle cx="8" cy="8" r="1.5" fill="#F9F9FA"/>
-          <circle cx="12" cy="8" r="1.5" fill="#F9F9FA"/>
-        </svg>
-      </button>
-
-      {/* Divider */}
-      <div className="w-px h-[18px] bg-border-default" />
-
-      {/* Create Order — dark button with accent border */}
-      <button className="flex items-center gap-1.5 px-3 h-9 rounded-lg bg-bg-base border border-border-default text-14 font-medium text-text-primary hover:bg-bg-hover transition-colors">
+      {/* Create Order CTA: 119x36, bg #F9F9FA, text #0A0A0B, radius 8 */}
+      <button className="flex items-center h-9 px-4 rounded-lg bg-neutral-50 text-14 font-medium text-text-inverse hover:bg-neutral-200 transition-colors whitespace-nowrap">
         Create Order
       </button>
     </div>
@@ -261,7 +307,7 @@ const RightColumn: React.FC = () => {
             className={clsx(
               'flex-1 h-9 rounded-md text-14 font-medium transition-colors',
               tradeTab === 'buy'
-                ? 'bg-status-success text-bg-base'
+                ? 'bg-buy text-bg-base'
                 : 'text-text-muted hover:text-text-secondary'
             )}
           >
@@ -272,7 +318,7 @@ const RightColumn: React.FC = () => {
             className={clsx(
               'flex-1 h-9 rounded-md text-14 font-medium transition-colors',
               tradeTab === 'sell'
-                ? 'bg-status-danger text-bg-base'
+                ? 'bg-sell text-bg-base'
                 : 'text-text-muted hover:text-text-secondary'
             )}
           >
@@ -289,8 +335,8 @@ const RightColumn: React.FC = () => {
         <button className={clsx(
           'w-full h-12 rounded-lg text-14 font-medium transition-colors',
           tradeTab === 'buy'
-            ? 'bg-status-success text-bg-base hover:bg-status-success/90'
-            : 'bg-status-danger text-bg-base hover:bg-status-danger/90'
+            ? 'bg-buy text-bg-base hover:bg-buy/90'
+            : 'bg-sell text-bg-base hover:bg-sell/90'
         )}>
           Trade (Taker)
         </button>
@@ -374,8 +420,8 @@ const BottomStats: React.FC = () => (
     <div className="flex items-center gap-6">
       {/* LIVE DATA indicator */}
       <div className="flex items-center gap-1">
-        <span className="w-2 h-2 rounded-full bg-status-success animate-pulse" />
-        <span className="text-12 font-medium text-status-success">LIVE DATA</span>
+        <span className="w-2 h-2 rounded-full bg-buy animate-pulse" />
+        <span className="text-12 font-medium text-success">LIVE DATA</span>
       </div>
       <div className="flex items-center gap-1.5">
         <span className="text-12 text-text-secondary">Total Vol</span>
@@ -397,29 +443,26 @@ const BottomStats: React.FC = () => (
 // ─── Main Page Component ───
 export const MarketDetailV2Page: React.FC = () => {
   return (
-    // Figma: body 1440px centered, market-detail 1376px (px-4 = 16px padding)
-    <div className="max-w-[1440px] mx-auto px-8">
+    // Aligned with Navbar: max-w-[1280px] mx-auto px-4 md:px-6 lg:px-8
+    <div className="max-w-[1280px] mx-auto px-4 md:px-6 lg:px-8">
       {/* Breadcrumb — Figma 37222:132667, 1376x16 */}
       <div className="py-3">
         <Breadcrumb />
       </div>
 
-      {/* market-detail container — Figma 37222:132668, 1376x1922, px-4, VERTICAL */}
-      <div className="px-4">
-        {/* Market Header — Figma 37222:132669, 1344x96 */}
-        <MarketHeader />
+      {/* Market Header — Figma 37222:132669, 1344x96 */}
+      <MarketHeader />
 
-        {/* 2-column layout — Figma 37222:132670, 1344x1826, gap-16, HORIZONTAL */}
-        <div className="flex gap-4">
-          {/* Left: market — Figma 37315:160537, ~928px, flex-1 */}
-          <LeftColumn />
+      {/* 2-column layout — Figma 37222:132670, 1344x1826, gap-16, HORIZONTAL */}
+      <div className="flex gap-4">
+        {/* Left: market — Figma 37315:160537, ~928px, flex-1 */}
+        <LeftColumn />
 
-          {/* Divider — Figma 37222:132672 */}
-          <div className="w-px bg-border-subtle self-stretch" />
+        {/* Divider — Figma 37222:132672 */}
+        <div className="w-px bg-border-subtle self-stretch" />
 
-          {/* Right: trade+chart — Figma 37222:132673, 384px */}
-          <RightColumn />
-        </div>
+        {/* Right: trade+chart — Figma 37222:132673, 384px */}
+        <RightColumn />
       </div>
 
       {/* Bottom Stats — Figma 37222:132677, 1376x44 */}
