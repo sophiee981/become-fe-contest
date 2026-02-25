@@ -1055,47 +1055,90 @@ const RecentTradesTable: React.FC = () => (
 )
 
 // ─── 5. Bottom Stats Bar ──────────────────────────────────────────────────────
+// Figma node 42532:726513 — bottom-stats
+// Container: HORIZONTAL, 44px height, bg=#0A0A0B, gap=16px, no border, no radius
+// Left (live-data): LIVE DATA badge | Total Vol | Vol 24h — gap=16px each
+// Right (link+social): Docs/Dune/Link3 links | X + Discord icon buttons
+
+// X (Twitter) icon — 12×12, fill=#F9F9FA
+const XIcon: React.FC<{ size?: number }> = ({ size = 12 }) => (
+  <svg width={size} height={size} viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M9.17 1H10.81L7.26 5.1L11.45 11H8.15L5.57 7.59L2.64 11H1L4.77 6.61L0.75 1H4.13L6.48 4.12L9.17 1ZM8.59 10.03H9.51L3.62 1.96H2.64L8.59 10.03Z" fill="#F9F9FA" />
+  </svg>
+)
+
+// Discord icon — 12×12, fill=#F9F9FA
+const DiscordIcon: React.FC<{ size?: number }> = ({ size = 12 }) => (
+  <svg width={size} height={size} viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M10.17 2.54A9.83 9.83 0 0 0 7.82 1.8a.07.07 0 0 0-.07.03c-.1.18-.2.4-.28.58a9.08 9.08 0 0 0-2.73 0 5.64 5.64 0 0 0-.28-.58.07.07 0 0 0-.07-.03A9.8 9.8 0 0 0 2.04 2.54a.06.06 0 0 0-.03.03C.78 4.8.37 6.99.57 9.15a.07.07 0 0 0 .03.05c.97.72 1.91 1.15 2.83 1.44a.07.07 0 0 0 .08-.03c.22-.3.41-.62.58-.95a.07.07 0 0 0-.04-.1 6.47 6.47 0 0 1-.92-.44.07.07 0 0 1-.01-.12c.06-.05.13-.1.19-.14a.07.07 0 0 1 .07-.01c1.93.88 4.02.88 5.93 0a.07.07 0 0 1 .07.01c.06.05.13.1.19.15a.07.07 0 0 1-.01.11c-.3.17-.6.32-.93.44a.07.07 0 0 0-.04.1c.17.33.37.65.58.95a.07.07 0 0 0 .08.03c.93-.29 1.87-.72 2.84-1.44a.07.07 0 0 0 .03-.05c.24-2.5-.4-4.67-1.68-6.6a.05.05 0 0 0-.03-.02ZM4.2 7.82c-.59 0-1.07-.54-1.07-1.2 0-.67.47-1.2 1.07-1.2.6 0 1.08.54 1.07 1.2 0 .66-.47 1.2-1.07 1.2Zm3.95 0c-.59 0-1.07-.54-1.07-1.2 0-.67.47-1.2 1.07-1.2.6 0 1.08.54 1.07 1.2 0 .66-.47 1.2-1.07 1.2Z" fill="#F9F9FA" />
+  </svg>
+)
 
 const BottomStats: React.FC = () => (
-  <div className="flex flex-wrap items-center justify-between gap-4 py-3 px-4 rounded-xl border border-[#1b1b1c] bg-[#0a0a0b]">
-    <div className="flex flex-wrap items-center gap-6">
-      <div className="flex items-center gap-2">
-        <Radio size={14} className="text-[#5bd197]" />
-        <span className="text-12 font-semibold text-[#5bd197] tracking-wider">LIVE DATA</span>
+  // Figma: HORIZONTAL, h=44px, bg=#0A0A0B, justify-between, no border, no border-radius
+  <div className="flex items-center justify-between h-11 bg-[#0a0a0b]">
+
+    {/* ── Left: live-data — HORIZONTAL gap=16px ─────────────────────────────── */}
+    <div className="flex items-center gap-4">
+
+      {/* LIVE DATA — icon-slot(20×20, p=2→16×16 green dot) + text 12px/500/#5BD197, gap=4px */}
+      <div className="flex items-center gap-1">
+        <span className="w-5 h-5 flex items-center justify-center p-0.5 shrink-0">
+          {/* live dot — 16×16 filled green circle */}
+          <span className="w-2 h-2 rounded-full bg-[#5bd197] animate-pulse" />
+        </span>
+        <span className="text-[12px] font-[500] leading-[16px] text-[#5bd197]">LIVE DATA</span>
       </div>
-      <div className="flex items-center gap-1.5">
-        <span className="text-12 text-[#7a7a83]">Total Vol</span>
-        <span className="text-12 font-medium text-[#f9f9fa]">{HOME_STATS.totalVol}</span>
+
+      {/* Total Vol — label(12/400/#B4B4BA) + value(12/400/#F9F9FA), gap=4px */}
+      <div className="flex items-center gap-1">
+        <span className="text-[12px] font-[400] leading-[16px] text-[#b4b4ba]">Total Vol</span>
+        <span className="text-[12px] font-[400] leading-[16px] text-[#f9f9fa]">{HOME_STATS.totalVol}</span>
       </div>
-      <div className="flex items-center gap-1.5">
-        <span className="text-12 text-[#7a7a83]">Vol 24h</span>
-        <span className="text-12 font-medium text-[#f9f9fa]">{HOME_STATS.vol24h}</span>
-      </div>
-      <div className="flex items-center gap-1.5">
-        <span className="text-12 text-[#7a7a83]">Live Markets</span>
-        <span className="text-12 font-medium text-[#f9f9fa]">{HOME_STATS.liveMarketCount}</span>
+
+      {/* Vol 24h — same pattern */}
+      <div className="flex items-center gap-1">
+        <span className="text-[12px] font-[400] leading-[16px] text-[#b4b4ba]">Vol 24h</span>
+        <span className="text-[12px] font-[400] leading-[16px] text-[#f9f9fa]">{HOME_STATS.vol24h}</span>
       </div>
     </div>
+
+    {/* ── Right: link+social — HORIZONTAL gap=16px ──────────────────────────── */}
     <div className="flex items-center gap-4">
-      {['Docs', 'Dune', 'Link3'].map(link => (
+
+      {/* Links — each: text 12px/400/#B4B4BA + arrow icon 12×12, gap=2px */}
+      {(['Docs', 'Dune', 'Link3'] as const).map(link => (
         <button
           key={link}
-          className="text-12 text-[#7a7a83] hover:text-[#f9f9fa] flex items-center gap-1 transition-colors"
+          className="flex items-center gap-0.5 text-[12px] font-[400] leading-[16px] text-[#b4b4ba]
+                     hover:text-[#f9f9fa] transition-colors"
         >
           {link}
-          <ArrowUpRight size={10} />
+          {/* icon-slot 16×16, p=2 → arrow_right_up_fill 12×12, color inherits */}
+          <span className="w-4 h-4 flex items-center justify-center p-0.5 shrink-0">
+            <ArrowRightUpFillIcon size={12} />
+          </span>
         </button>
       ))}
+
+      {/* Social buttons — each: 28×28, rounded-full (r=9999), bg=#1B1B1C, icon 12×12 #F9F9FA */}
       <div className="flex items-center gap-2">
-        {[{ icon: '𝕏', label: 'Twitter' }, { icon: '💬', label: 'Discord' }].map(({ icon, label }) => (
-          <button
-            key={label}
-            aria-label={label}
-            className="w-7 h-7 rounded-lg bg-[#1b1b1c] flex items-center justify-center text-[#7a7a83] hover:text-[#f9f9fa] hover:bg-[#252527] active:bg-[#2e2e34] transition-colors"
-          >
-            <span className="text-11">{icon}</span>
-          </button>
-        ))}
+        <button
+          aria-label="Twitter / X"
+          className="w-7 h-7 rounded-full bg-[#1b1b1c] flex items-center justify-center
+                     hover:bg-[#252527] active:bg-[#2e2e34] transition-colors shrink-0"
+          style={{ boxSizing: 'border-box' }}
+        >
+          <XIcon size={12} />
+        </button>
+        <button
+          aria-label="Discord"
+          className="w-7 h-7 rounded-full bg-[#1b1b1c] flex items-center justify-center
+                     hover:bg-[#252527] active:bg-[#2e2e34] transition-colors shrink-0"
+          style={{ boxSizing: 'border-box' }}
+        >
+          <DiscordIcon size={12} />
+        </button>
       </div>
     </div>
   </div>
