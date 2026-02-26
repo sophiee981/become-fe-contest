@@ -3,13 +3,16 @@
 // Body container: max-w-[1440px] centered
 // market-detail: 1376px (px-4 = 16px each side), VERTICAL, gap between sections
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { clsx } from 'clsx'
 import {
-  mockHomeMarkets, mockUpcomingListings, mockEndedMarkets,
-  type HomeMarket,
+  mockHomeMarkets, mockUpcomingListings, mockEndedMarkets, mockHomeRecentTrades,
+  type HomeMarket, type HomeRecentTrade,
 } from '@/mock-data/homeData'
+import { mockBuyOrders, mockSellOrders } from '@/mock-data/orderBook'
+import { mockMyOrders } from '@/mock-data/myOrders'
+import { RecentTradesTable } from '@/components/market/RecentTradesTable'
 
 // ─── Token image imports ───
 import tokenSkateImg  from '@/assets/images/token-skate.png'
@@ -64,6 +67,12 @@ const fmtVol = (n: number) => {
 
 const fmtVolChange = (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`
 
+const fmtAmt = (n: number) => {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(2)}K`
+  return n.toFixed(2)
+}
+
 // ─── Find market by route id across all data sources ───
 function findMarketById(id: string): HomeMarket | undefined {
   const allMarkets = [...mockHomeMarkets, ...mockUpcomingListings.map(u => ({
@@ -82,17 +91,64 @@ function findMarketById(id: string): HomeMarket | undefined {
     status: 'upcoming' as const,
   })), ...mockEndedMarkets]
 
-  // Try exact match first
   const exact = allMarkets.find(m => m.id === id)
   if (exact) return exact
-
-  // Try matching by token ticker (case-insensitive) — e.g. route id "skate" → token "SKATE"
   const byToken = allMarkets.find(m => m.token.toLowerCase() === id.toLowerCase())
   if (byToken) return byToken
-
-  // Try matching by id prefix — e.g. route id "skate-progress" matches
   return allMarkets.find(m => m.id.startsWith(id.toLowerCase()))
 }
+
+// ─── Live trade simulation (same as LandingPage) ──────────────────────────────
+const LIVE_PAIRS = [
+  { pair: 'SKATE/USDC',  baseToken: 'SKATE', price: 0.0550, collateralToken: 'USDC' as const },
+  { pair: 'ERA/USDC',    baseToken: 'ERA',   price: 0.0464, collateralToken: 'USDC' as const },
+  { pair: 'GRASS/USDC',  baseToken: 'GRASS', price: 0.1100, collateralToken: 'USDC' as const },
+  { pair: 'ZBT/USDT',   baseToken: 'ZBT',   price: 0.0842, collateralToken: 'USDT' as const },
+]
+const LIVE_ANIMALS: Array<'shark' | 'whale' | 'shrimp'> = ['shark', 'shark', 'shark', 'whale', 'shrimp']
+const TIME_LABELS = ['just now', '1s ago', '2s ago', '5s ago', '10s ago', '15s ago', '20s ago', '30s ago', '45s ago', '1m ago']
+let _tradeCounter = 200
+
+function makeLiveTrade(): HomeRecentTrade {
+  const p      = LIVE_PAIRS[Math.floor(Math.random() * LIVE_PAIRS.length)]
+  const side   = Math.random() > 0.48 ? 'buy' : 'sell'
+  const animal = LIVE_ANIMALS[Math.floor(Math.random() * LIVE_ANIMALS.length)]
+  const isRS   = Math.random() > 0.75
+  const price  = parseFloat((p.price * (0.95 + Math.random() * 0.10)).toFixed(4))
+  const amtRaw = Math.floor(1000 + Math.random() * 199000)
+  const amount = amtRaw >= 1000 ? `${(amtRaw / 1000).toFixed(2)}K` : `${amtRaw}`
+  const colRaw = Math.floor(10 + Math.random() * 1990)
+  const collateral = colRaw >= 1000 ? `${(colRaw / 1000).toFixed(2)}K` : `${colRaw}.00`
+  const id = `v2live-${++_tradeCounter}`
+  return {
+    id, timeAgo: 'just now',
+    side, isRS,
+    pair: p.pair, baseToken: p.baseToken,
+    price, amount, collateral, collateralToken: p.collateralToken, animal,
+    txId: `0x${Math.random().toString(16).slice(2, 8)}...`,
+  }
+}
+
+function ageTradeList(trades: HomeRecentTrade[]): HomeRecentTrade[] {
+  return trades.map((t, i) => ({ ...t, timeAgo: TIME_LABELS[Math.min(i, TIME_LABELS.length - 1)] }))
+}
+
+// ─── Mock price chart data ─────────────────────────────────────────────────────
+// Simulates SKATE going from ~0.021 → 0.055 (+162.18%)
+const CHART_DATA_ALL = [
+  { t: '00:00', p: 2.1, v: 120 }, { t: '01:00', p: 1.9, v: 95 },
+  { t: '02:00', p: 2.2, v: 180 }, { t: '03:00', p: 2.5, v: 210 },
+  { t: '04:00', p: 2.4, v: 155 }, { t: '05:00', p: 2.8, v: 240 },
+  { t: '06:00', p: 3.1, v: 320 }, { t: '07:00', p: 3.0, v: 280 },
+  { t: '08:00', p: 3.5, v: 350 }, { t: '09:00', p: 3.8, v: 420 },
+  { t: '10:00', p: 4.2, v: 480 }, { t: '11:00', p: 4.1, v: 410 },
+  { t: '12:00', p: 4.4, v: 520 }, { t: '13:00', p: 4.7, v: 610 },
+  { t: '14:00', p: 5.0, v: 750 }, { t: '15:00', p: 5.5, v: 840 },
+  { t: '16:00', p: 5.2, v: 620 }, { t: '17:00', p: 5.6, v: 700 },
+  { t: '18:00', p: 5.8, v: 780 }, { t: '19:00', p: 5.4, v: 590 },
+  { t: '20:00', p: 5.7, v: 660 }, { t: '21:00', p: 6.0, v: 820 },
+  { t: '22:00', p: 5.9, v: 710 }, { t: '23:00', p: 5.5, v: 530 },
+]
 
 // ─── Breadcrumb (Figma node 37222:132667) ───
 const Breadcrumb: React.FC<{ token: string }> = ({ token }) => (
@@ -302,13 +358,366 @@ const MarketHeader: React.FC<{ market: HomeMarket }> = ({ market }) => {
   )
 }
 
-// ─── Left Column: Trading Market ───
-const LeftColumn: React.FC = () => {
+// ─── Price Line Chart (Figma 37315:161696) ────────────────────────────────────
+type ChartPeriod = '1d' | '7d' | '30d' | 'All'
+type ChartType   = 'Price' | 'FDV'
+
+interface ChartPoint { t: string; p: number; v: number }
+
+const PriceLineChart: React.FC<{ market: HomeMarket }> = ({ market }) => {
+  const [period, setPeriod] = useState<ChartPeriod>('All')
+  const [chartType, setChartType] = useState<ChartType>('Price')
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null)
+
+  // slice data by period
+  const data: ChartPoint[] = useMemo(() => {
+    const slices: Record<ChartPeriod, number> = { '1d': 8, '7d': 12, '30d': 18, All: 24 }
+    return CHART_DATA_ALL.slice(-slices[period])
+  }, [period])
+
+  // scale — use p values (multiply by 0.01 to get real price)
+  const W = 900; const H_CHART = 280; const H_VOL = 60; const H_TOTAL = H_CHART + H_VOL + 20
+  const minP = Math.min(...data.map(d => d.p))
+  const maxP = Math.max(...data.map(d => d.p))
+  const padP = (maxP - minP) * 0.1
+  const domainMin = minP - padP
+  const domainMax = maxP + padP
+  const maxV = Math.max(...data.map(d => d.v))
+
+  const xStep = W / (data.length - 1)
+  const yPrice = (p: number) => H_CHART - ((p - domainMin) / (domainMax - domainMin)) * (H_CHART - 20) - 10
+  const yVol   = (v: number) => H_VOL - (v / maxV) * (H_VOL - 4)
+
+  // Build SVG path for price line
+  const linePath = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${i * xStep} ${yPrice(d.p)}`).join(' ')
+  const areaPath = `${linePath} L ${(data.length - 1) * xStep} ${H_CHART} L 0 ${H_CHART} Z`
+
+  const hoveredData = hoverIdx !== null ? data[hoverIdx] : data[data.length - 1]
+  const isUp = data[data.length - 1].p >= data[0].p
+
+  return (
+    <div className="flex flex-col gap-0 border border-border-subtle rounded-lg bg-bg-surface overflow-hidden">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between px-4 h-12 border-b border-border-subtle">
+        <div className="flex items-center gap-1">
+          {(['1d', '7d', '30d', 'All'] as ChartPeriod[]).map(p => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              className={clsx(
+                'px-3 h-7 rounded text-12 font-medium transition-colors',
+                period === p
+                  ? 'bg-bg-elevated text-text-primary'
+                  : 'text-text-muted hover:text-text-secondary',
+              )}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1 p-0.5 bg-bg-elevated rounded-lg">
+          {(['Price', 'FDV'] as ChartType[]).map(t => (
+            <button
+              key={t}
+              onClick={() => setChartType(t)}
+              className={clsx(
+                'px-3 h-7 rounded-md text-12 font-medium transition-colors',
+                chartType === t
+                  ? 'bg-bg-base text-text-primary shadow-sm'
+                  : 'text-text-muted hover:text-text-secondary',
+              )}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Price info row */}
+      <div className="flex items-center gap-4 px-4 pt-3 pb-2">
+        <span className="text-20 font-medium text-text-primary tabular-nums">
+          ${(hoveredData.p * 0.01).toFixed(4)}
+        </span>
+        <span className={clsx('text-12', isUp ? 'text-success' : 'text-danger')}>
+          {isUp ? '+' : ''}{(((data[data.length-1].p - data[0].p) / data[0].p) * 100).toFixed(2)}%
+        </span>
+        {hoverIdx !== null && (
+          <span className="text-12 text-text-muted ml-auto">{hoveredData.t}</span>
+        )}
+      </div>
+
+      {/* SVG chart */}
+      <div className="px-2 pb-0">
+        <svg
+          width="100%"
+          viewBox={`0 0 ${W} ${H_TOTAL}`}
+          preserveAspectRatio="none"
+          className="w-full"
+          style={{ height: 330 }}
+          onMouseLeave={() => setHoverIdx(null)}
+          onMouseMove={e => {
+            const rect = (e.currentTarget as SVGElement).getBoundingClientRect()
+            const x = ((e.clientX - rect.left) / rect.width) * W
+            const idx = Math.round(x / xStep)
+            setHoverIdx(Math.max(0, Math.min(data.length - 1, idx)))
+          }}
+        >
+          <defs>
+            <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={isUp ? '#5BD197' : '#FD5E67'} stopOpacity="0.18" />
+              <stop offset="100%" stopColor={isUp ? '#5BD197' : '#FD5E67'} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+
+          {/* Y-axis grid lines */}
+          {[0, 0.25, 0.5, 0.75, 1].map(frac => {
+            const y = 10 + frac * (H_CHART - 20)
+            const price = domainMax - frac * (domainMax - domainMin)
+            return (
+              <g key={frac}>
+                <line x1="0" y1={y} x2={W} y2={y} stroke="#1B1B1C" strokeWidth="1" />
+                <text x="4" y={y - 3} fill="#7A7A83" fontSize="10" fontFamily="Inter">
+                  ${(price * 0.01).toFixed(4)}
+                </text>
+              </g>
+            )
+          })}
+
+          {/* Area fill */}
+          <path d={areaPath} fill="url(#chartGrad)" />
+
+          {/* Price line */}
+          <path
+            d={linePath}
+            fill="none"
+            stroke={isUp ? '#5BD197' : '#FD5E67'}
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+
+          {/* Hover vertical line */}
+          {hoverIdx !== null && (
+            <>
+              <line
+                x1={hoverIdx * xStep}
+                y1={0}
+                x2={hoverIdx * xStep}
+                y2={H_CHART}
+                stroke="#2E2E34"
+                strokeWidth="1"
+                strokeDasharray="3 3"
+              />
+              <circle
+                cx={hoverIdx * xStep}
+                cy={yPrice(data[hoverIdx].p)}
+                r="4"
+                fill={isUp ? '#5BD197' : '#FD5E67'}
+                stroke="#0A0A0B"
+                strokeWidth="1.5"
+              />
+            </>
+          )}
+
+          {/* Volume bars — in bottom H_VOL px offset by H_CHART+gap */}
+          {data.map((d, i) => {
+            const barW = Math.max(1, xStep * 0.6)
+            const barH = (d.v / maxV) * (H_VOL - 4)
+            const x = i * xStep - barW / 2
+            const y = H_CHART + 20 + (H_VOL - 4) - barH
+            const isHighlight = hoverIdx === i
+            return (
+              <rect
+                key={i}
+                x={x}
+                y={y}
+                width={barW}
+                height={barH}
+                fill={d.v > maxV * 0.6 ? (isUp ? '#5BD197' : '#FD5E67') : '#252527'}
+                opacity={isHighlight ? 1 : 0.6}
+                rx="1"
+              />
+            )
+          })}
+
+          {/* X-axis time labels */}
+          {data.filter((_, i) => i % Math.ceil(data.length / 6) === 0).map((d, i, arr) => {
+            const origIdx = data.indexOf(d)
+            return (
+              <text
+                key={i}
+                x={origIdx * xStep}
+                y={H_TOTAL - 2}
+                fill="#7A7A83"
+                fontSize="10"
+                fontFamily="Inter"
+                textAnchor={origIdx === 0 ? 'start' : origIdx === data.length - 1 ? 'end' : 'middle'}
+              >
+                {d.t}
+              </text>
+            )
+          })}
+        </svg>
+      </div>
+    </div>
+  )
+}
+
+// ─── Order Book (Figma 37315:161694) ─────────────────────────────────────────
+// Side-by-side: Ask (sell) on left, Bid (buy) on right
+const OrderBook: React.FC = () => {
+  const [precision, setPrecision] = useState<'0.00001' | '0.0001' | '0.001'>('0.00001')
+  const midPrice = ((mockBuyOrders[0].price + mockSellOrders[0].price) / 2)
+  const spread    = mockSellOrders[0].price - mockBuyOrders[0].price
+  const spreadPct = ((spread / midPrice) * 100).toFixed(3)
+
+  const maxDepthSell = Math.max(...mockSellOrders.map(o => o.depth ?? 0))
+  const maxDepthBuy  = Math.max(...mockBuyOrders.map(o => o.depth ?? 0))
+
+  return (
+    <div className="border border-border-subtle rounded-lg bg-bg-surface overflow-hidden">
+      {/* Header row */}
+      <div className="flex items-center justify-between px-4 h-11 border-b border-border-subtle">
+        <span className="text-14 font-medium text-text-primary">Order Book</span>
+        <div className="flex items-center gap-1">
+          {(['0.00001', '0.0001', '0.001'] as const).map(p => (
+            <button
+              key={p}
+              onClick={() => setPrecision(p)}
+              className={clsx(
+                'px-2 h-6 rounded text-11 font-medium transition-colors',
+                precision === p
+                  ? 'bg-bg-elevated text-text-primary'
+                  : 'text-text-muted hover:text-text-secondary',
+              )}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Two-column order book */}
+      <div className="flex divide-x divide-border-subtle">
+        {/* SELL side (Ask) */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center h-8 px-3 border-b border-border-subtle">
+            <span className="flex-1 text-11 font-medium text-text-muted text-left">Total</span>
+            <span className="flex-1 text-11 font-medium text-text-muted text-right">Amount</span>
+            <span className="w-24 text-11 font-medium text-danger text-right">Price ($)</span>
+          </div>
+          <div className="flex flex-col">
+            {mockSellOrders.map((order, i) => {
+              const depthPct = ((order.depth ?? 0) / maxDepthSell) * 100
+              return (
+                <div
+                  key={i}
+                  className="relative flex items-center h-9 px-3 hover:bg-white/[0.02] cursor-pointer transition-colors group"
+                >
+                  {/* depth bar — from right */}
+                  <div
+                    className="absolute right-0 top-0 h-full bg-danger/10 transition-all"
+                    style={{ width: `${depthPct}%` }}
+                  />
+                  <span className="relative flex-1 text-12 text-text-secondary tabular-nums text-left">
+                    {order.total.toFixed(1)}
+                  </span>
+                  <span className="relative flex-1 text-12 text-text-secondary tabular-nums text-right">
+                    {fmtAmt(order.amount)}
+                  </span>
+                  <span className="relative w-24 text-12 font-medium text-danger tabular-nums text-right">
+                    {order.price.toFixed(6)}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* BUY side (Bid) */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center h-8 px-3 border-b border-border-subtle">
+            <span className="w-24 text-11 font-medium text-success text-left">Price ($)</span>
+            <span className="flex-1 text-11 font-medium text-text-muted text-left">Amount</span>
+            <span className="flex-1 text-11 font-medium text-text-muted text-right">Total</span>
+          </div>
+          <div className="flex flex-col">
+            {mockBuyOrders.map((order, i) => {
+              const depthPct = ((order.depth ?? 0) / maxDepthBuy) * 100
+              return (
+                <div
+                  key={i}
+                  className="relative flex items-center h-9 px-3 hover:bg-white/[0.02] cursor-pointer transition-colors group"
+                >
+                  {/* depth bar — from left */}
+                  <div
+                    className="absolute left-0 top-0 h-full bg-success/10 transition-all"
+                    style={{ width: `${depthPct}%` }}
+                  />
+                  <span className="relative w-24 text-12 font-medium text-success tabular-nums text-left">
+                    {order.price.toFixed(6)}
+                  </span>
+                  <span className="relative flex-1 text-12 text-text-secondary tabular-nums text-left pl-3">
+                    {fmtAmt(order.amount)}
+                  </span>
+                  <span className="relative flex-1 text-12 text-text-secondary tabular-nums text-right">
+                    {order.total.toFixed(1)}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Mid price + spread row */}
+      <div className="flex items-center justify-center gap-4 h-10 border-t border-border-subtle bg-bg-elevated/50">
+        <span className="text-14 font-medium text-text-primary tabular-nums">
+          ${midPrice.toFixed(6)}
+        </span>
+        <span className="text-12 text-text-muted">
+          Spread: {spread.toFixed(6)} ({spreadPct}%)
+        </span>
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex items-center gap-2 px-4 py-3 border-t border-border-subtle">
+        <button className="flex-1 h-8 rounded-md bg-success/10 text-12 font-medium text-success hover:bg-success/20 transition-colors">
+          Buy Order
+        </button>
+        <button className="flex-1 h-8 rounded-md bg-danger/10 text-12 font-medium text-danger hover:bg-danger/20 transition-colors">
+          Sell Order
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Left Column ─────────────────────────────────────────────────────────────
+const LeftColumn: React.FC<{ market: HomeMarket }> = ({ market }) => {
   const [activeTab, setActiveTab] = useState<'collateral' | 'fill' | 'order'>('collateral')
-  const [chartPeriod, setChartPeriod] = useState<'2d' | '1w' | '1M' | 'All'>('All')
+
+  // Live trade simulation
+  const [liveTradesRaw, setLiveTradesRaw] = useState<HomeRecentTrade[]>(
+    () => [...mockHomeRecentTrades],
+  )
+  const [newId, setNewId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      const trade = makeLiveTrade()
+      setNewId(trade.id)
+      setLiveTradesRaw(prev => {
+        const aged = ageTradeList([trade, ...prev])
+        return aged.slice(0, 10)
+      })
+      setTimeout(() => setNewId(null), 400)
+    }, 2500)
+    return () => clearInterval(t)
+  }, [])
 
   return (
     <div className="flex-1 min-w-0 flex flex-col gap-4 py-4">
+      {/* Trading Market header */}
       <div className="flex items-center justify-between h-7">
         <span className="text-16 font-medium text-text-primary">Trading Market</span>
         <div className="flex items-center gap-2">
@@ -319,6 +728,7 @@ const LeftColumn: React.FC = () => {
         </div>
       </div>
 
+      {/* Filter tabs + period pills */}
       <div className="flex items-center justify-between h-12">
         <div className="flex items-center gap-2">
           {(['Collateral', 'Fill Type', 'Order Type'] as const).map((tab) => {
@@ -328,172 +738,411 @@ const LeftColumn: React.FC = () => {
                 key={tab}
                 onClick={() => setActiveTab(tabKey)}
                 className={clsx(
-                  'px-3 h-8 rounded-md text-12 font-medium transition-colors',
+                  'flex items-center gap-1 px-3 h-8 rounded-md text-12 font-medium transition-colors',
                   activeTab === tabKey
                     ? 'bg-bg-elevated text-text-primary'
                     : 'text-text-muted hover:text-text-secondary'
                 )}
               >
-                {tab}
-                <svg className="inline-block ml-1" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                {tab === 'Collateral' ? market.collateral : tab}
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
                 </svg>
               </button>
             )
           })}
         </div>
+      </div>
+
+      {/* Chart (Figma 37315:161696) */}
+      <PriceLineChart market={market} />
+
+      {/* Order Book (Figma 37315:161694) */}
+      <OrderBook />
+
+      {/* Recent Trades (Figma 37315:189288) */}
+      <RecentTradesTable trades={liveTradesRaw} newId={newId} />
+    </div>
+  )
+}
+
+// ─── Mini Price Chart for right column ───────────────────────────────────────
+const MiniPriceChart: React.FC<{ isUp?: boolean }> = ({ isUp = true }) => {
+  const W = 360; const H = 260
+  const data = CHART_DATA_ALL.slice(-12)
+  const minP = Math.min(...data.map(d => d.p))
+  const maxP = Math.max(...data.map(d => d.p))
+  const padP = (maxP - minP) * 0.15
+  const domainMin = minP - padP
+  const domainMax = maxP + padP
+  const xStep = W / (data.length - 1)
+  const yP = (p: number) => H - ((p - domainMin) / (domainMax - domainMin)) * (H - 20) - 10
+  const linePath = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${i * xStep} ${yP(d.p)}`).join(' ')
+  const areaPath = `${linePath} L ${(data.length - 1) * xStep} ${H} L 0 ${H} Z`
+  const color = isUp ? '#5BD197' : '#FD5E67'
+
+  return (
+    <div className="border border-border-subtle rounded-lg bg-bg-surface overflow-hidden">
+      <div className="flex items-center justify-between px-4 h-11 border-b border-border-subtle">
+        <span className="text-14 font-medium text-text-primary">Price Chart</span>
         <div className="flex items-center gap-1">
-          {(['2d', '1w', '1M', 'All'] as const).map((p) => (
-            <button
-              key={p}
-              onClick={() => setChartPeriod(p)}
-              className={clsx(
-                'px-2 h-7 rounded text-12 font-medium transition-colors',
-                chartPeriod === p
-                  ? 'bg-bg-elevated text-text-primary'
-                  : 'text-text-muted hover:text-text-secondary'
-              )}
-            >
+          {['1d', '7d', '30d'].map(p => (
+            <button key={p} className="px-2 h-6 rounded text-11 text-text-muted hover:text-text-secondary transition-colors">
               {p}
             </button>
           ))}
         </div>
       </div>
+      <svg
+        width="100%"
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="none"
+        style={{ height: 220, display: 'block' }}
+      >
+        <defs>
+          <linearGradient id="miniGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.15" />
+            <stop offset="100%" stopColor={color} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={areaPath} fill="url(#miniGrad)" />
+        <path d={linePath} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
+      </svg>
+    </div>
+  )
+}
 
-      <div className="w-full h-[424px] rounded-lg bg-bg-surface border border-border-subtle flex items-center justify-center">
-        <span className="text-14 text-text-muted">Chart Area — 928 × 424</span>
+// ─── My Orders (Figma 37225:131293) ───────────────────────────────────────────
+const MyOrdersSection: React.FC<{ token: string }> = ({ token }) => {
+  const [tab, setTab] = useState<'filled' | 'open'>('filled')
+
+  const filledOrders = mockMyOrders.filter(o => o.status === 'filled')
+  const openOrders   = mockMyOrders.filter(o => o.status === 'open' || o.status === 'partial')
+  const displayed    = tab === 'filled' ? filledOrders : openOrders
+
+  return (
+    <div className="flex flex-col border border-border-subtle rounded-lg bg-bg-surface overflow-hidden">
+      {/* Tab header */}
+      <div className="flex items-center border-b border-border-subtle px-1">
+        <button
+          onClick={() => setTab('filled')}
+          className={clsx(
+            'flex items-center gap-1.5 px-3 h-11 text-13 font-medium transition-colors border-b-2 -mb-px',
+            tab === 'filled'
+              ? 'text-text-primary border-accent'
+              : 'text-text-muted border-transparent hover:text-text-secondary',
+          )}
+        >
+          My Filled Orders
+          <span className={clsx(
+            'px-1.5 py-0.5 rounded-full text-10 font-medium',
+            tab === 'filled' ? 'bg-accent/20 text-accent' : 'bg-bg-elevated text-text-muted',
+          )}>
+            {filledOrders.length}
+          </span>
+        </button>
+        <button
+          onClick={() => setTab('open')}
+          className={clsx(
+            'flex items-center gap-1.5 px-3 h-11 text-13 font-medium transition-colors border-b-2 -mb-px',
+            tab === 'open'
+              ? 'text-text-primary border-accent'
+              : 'text-text-muted border-transparent hover:text-text-secondary',
+          )}
+        >
+          My Open Orders
+          <span className={clsx(
+            'px-1.5 py-0.5 rounded-full text-10 font-medium',
+            tab === 'open' ? 'bg-accent/20 text-accent' : 'bg-bg-elevated text-text-muted',
+          )}>
+            {openOrders.length}
+          </span>
+        </button>
       </div>
 
-      <div className="w-full h-[742px] rounded-lg bg-bg-surface border border-border-subtle flex items-center justify-center">
-        <span className="text-14 text-text-muted">Order Book Table — 928 × 742</span>
+      {/* Column header */}
+      <div className="grid grid-cols-4 px-4 py-2 border-b border-border-subtle">
+        <span className="text-11 text-text-muted">Side / Pair</span>
+        <span className="text-11 text-text-muted text-right">Price ($)</span>
+        <span className="text-11 text-text-muted text-right">Amount</span>
+        <span className="text-11 text-text-muted text-right">
+          {tab === 'filled' ? 'Total' : 'Filled'}
+        </span>
       </div>
 
-      <div className="w-full flex flex-col gap-2 py-4">
-        <h3 className="text-16 font-medium text-text-primary">Recent Trades</h3>
-        <div className="w-full h-[480px] rounded-lg bg-bg-surface border border-border-subtle flex items-center justify-center">
-          <span className="text-14 text-text-muted">Recent Trades Table — 928 × 532</span>
+      {/* Rows */}
+      <div className="flex flex-col overflow-y-auto max-h-[480px]">
+        {displayed.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-2 py-16">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" className="text-text-muted">
+              <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M10 16h12M16 10v12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <span className="text-13 text-text-muted">No {tab} orders</span>
+          </div>
+        ) : (
+          displayed.map(order => (
+            <div
+              key={order.id}
+              className="grid grid-cols-4 items-center px-4 py-3 border-b border-border-subtle hover:bg-white/[0.02] transition-colors"
+            >
+              <div className="flex flex-col gap-0.5">
+                <span className={clsx(
+                  'text-12 font-medium',
+                  order.type === 'buy' ? 'text-success' : 'text-danger',
+                )}>
+                  {order.type === 'buy' ? 'Buy' : 'Sell'}
+                </span>
+                <span className="text-11 text-text-muted">{order.token}/USDC</span>
+              </div>
+              <span className="text-12 text-text-primary tabular-nums text-right">
+                ${fmtPrice(order.price)}
+              </span>
+              <span className="text-12 text-text-secondary tabular-nums text-right">
+                {fmtAmt(order.amount)}
+              </span>
+              {tab === 'filled' ? (
+                <span className="text-12 text-text-primary tabular-nums text-right">
+                  ${(order.price * order.amount).toFixed(2)}
+                </span>
+              ) : (
+                <div className="flex flex-col items-end gap-1">
+                  <span className="text-12 text-text-secondary tabular-nums">
+                    {order.filled}%
+                  </span>
+                  <div className="w-16 h-1 bg-bg-elevated rounded-full overflow-hidden">
+                    <div
+                      className={clsx('h-full rounded-full', order.type === 'buy' ? 'bg-success' : 'bg-danger')}
+                      style={{ width: `${order.filled}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Footer — cancel all */}
+      {tab === 'open' && openOrders.length > 0 && (
+        <div className="px-4 py-3 border-t border-border-subtle">
+          <button className="w-full h-8 rounded-md border border-danger/40 text-12 font-medium text-danger hover:bg-danger/10 transition-colors">
+            Cancel All Orders
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Trade Panel (Figma 37692:254729) ────────────────────────────────────────
+const TradePanel: React.FC<{ market: HomeMarket }> = ({ market }) => {
+  const [tab, setTab] = useState<'buy' | 'sell'>('buy')
+  const [orderType, setOrderType] = useState<'limit' | 'market'>('limit')
+  const [price, setPrice] = useState('')
+  const [amount, setAmount] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+
+  const total = useMemo(() => {
+    const p = parseFloat(price) || 0
+    const a = parseFloat(amount) || 0
+    return (p * a).toFixed(2)
+  }, [price, amount])
+
+  const feeAmt = useMemo(() => {
+    const t = parseFloat(total)
+    return isNaN(t) ? '0.00' : (t * 0.003).toFixed(4)
+  }, [total])
+
+  const handleTrade = async () => {
+    if (!price || !amount) return
+    setIsLoading(true)
+    await new Promise(r => setTimeout(r, 1200))
+    if (Math.random() < 0.1) {
+      setIsLoading(false)
+      return
+    }
+    setIsLoading(false)
+    setPrice('')
+    setAmount('')
+  }
+
+  const isBuy = tab === 'buy'
+
+  return (
+    <div className="flex flex-col gap-0 border border-border-subtle rounded-lg bg-bg-surface overflow-hidden">
+      {/* Buy/Sell toggle */}
+      <div className="flex p-1 gap-1">
+        <button
+          onClick={() => setTab('buy')}
+          className={clsx(
+            'flex-1 h-9 rounded-md text-14 font-medium transition-colors',
+            isBuy
+              ? 'bg-success text-bg-base'
+              : 'text-text-muted hover:text-text-secondary hover:bg-bg-elevated',
+          )}
+        >
+          Buy
+        </button>
+        <button
+          onClick={() => setTab('sell')}
+          className={clsx(
+            'flex-1 h-9 rounded-md text-14 font-medium transition-colors',
+            !isBuy
+              ? 'bg-danger text-bg-base'
+              : 'text-text-muted hover:text-text-secondary hover:bg-bg-elevated',
+          )}
+        >
+          Sell
+        </button>
+      </div>
+
+      <div className="flex flex-col gap-3 px-4 pb-4">
+        {/* Order type */}
+        <div className="flex items-center gap-1 p-0.5 bg-bg-elevated rounded-lg">
+          {(['limit', 'market'] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setOrderType(t)}
+              className={clsx(
+                'flex-1 h-7 rounded-md text-12 font-medium capitalize transition-colors',
+                orderType === t
+                  ? 'bg-bg-base text-text-primary shadow-sm'
+                  : 'text-text-muted hover:text-text-secondary',
+              )}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+
+        {/* Price input */}
+        <div className="flex flex-col gap-1">
+          <label className="text-12 text-text-muted">Price</label>
+          <div className="flex items-center gap-2 h-10 px-3 bg-bg-elevated rounded-lg border border-transparent
+                          focus-within:border-accent/50 transition-colors">
+            <input
+              type="number"
+              placeholder={`${fmtPrice(market.price)}`}
+              value={price}
+              onChange={e => setPrice(e.target.value)}
+              disabled={orderType === 'market'}
+              className="flex-1 bg-transparent text-13 text-text-primary placeholder:text-text-muted outline-none tabular-nums disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            <span className="text-12 text-text-muted shrink-0">USDC</span>
+          </div>
+        </div>
+
+        {/* Amount input */}
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center justify-between">
+            <label className="text-12 text-text-muted">Amount</label>
+            <span className="text-11 text-text-muted">Balance: 8,420 USDC</span>
+          </div>
+          <div className="flex items-center gap-2 h-10 px-3 bg-bg-elevated rounded-lg border border-transparent
+                          focus-within:border-accent/50 transition-colors">
+            <input
+              type="number"
+              placeholder="0"
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              className="flex-1 bg-transparent text-13 text-text-primary placeholder:text-text-muted outline-none tabular-nums"
+            />
+            <button
+              onClick={() => setAmount('100000')}
+              className="text-11 font-medium text-accent hover:text-accent/80 transition-colors shrink-0"
+            >
+              Max
+            </button>
+            <span className="text-12 text-text-muted shrink-0">{market.token}</span>
+          </div>
+        </div>
+
+        {/* Percentage quick-select */}
+        <div className="flex items-center gap-1">
+          {[25, 50, 75, 100].map(pct => (
+            <button
+              key={pct}
+              onClick={() => setAmount(String(Math.floor(8420 / (parseFloat(price) || market.price) * pct / 100)))}
+              className="flex-1 h-7 rounded-md text-11 font-medium text-text-muted bg-bg-elevated hover:text-text-secondary hover:bg-bg-hover transition-colors"
+            >
+              {pct}%
+            </button>
+          ))}
+        </div>
+
+        {/* Summary */}
+        <div className="flex flex-col gap-2 pt-1">
+          <div className="flex items-center justify-between text-12">
+            <span className="text-text-muted">Total</span>
+            <span className="text-text-primary tabular-nums">{total} USDC</span>
+          </div>
+          <div className="flex items-center justify-between text-12">
+            <span className="text-text-muted">Fee (0.3%)</span>
+            <span className="text-text-secondary tabular-nums">{feeAmt} USDC</span>
+          </div>
+          <div className="flex items-center justify-between text-12">
+            <span className="text-text-muted">Est. Received</span>
+            <span className={clsx('tabular-nums', isBuy ? 'text-success' : 'text-danger')}>
+              {amount ? `${parseFloat(amount).toLocaleString()} ${market.token}` : '—'}
+            </span>
+          </div>
+        </div>
+
+        {/* Trade button */}
+        <button
+          onClick={handleTrade}
+          disabled={isLoading || !price || !amount}
+          className={clsx(
+            'w-full h-11 rounded-lg text-14 font-medium transition-colors',
+            isBuy
+              ? 'bg-success text-bg-base hover:bg-success/90 disabled:opacity-50'
+              : 'bg-danger text-bg-base hover:bg-danger/90 disabled:opacity-50',
+            (isLoading || !price || !amount) && 'cursor-not-allowed',
+          )}
+        >
+          {isLoading ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Processing...
+            </span>
+          ) : (
+            `Trade (Taker) — ${isBuy ? 'Buy' : 'Sell'} ${market.token}`
+          )}
+        </button>
+
+        {/* Collateral info */}
+        <div className="flex items-center justify-between pt-1 border-t border-border-subtle text-12">
+          <span className="text-text-muted flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <circle cx="6" cy="6" r="5" stroke="#7A7A83" strokeWidth="1"/>
+              <path d="M6 5v4M6 3.5v.5" stroke="#7A7A83" strokeLinecap="round"/>
+            </svg>
+            Collateral: {market.collateral}
+          </span>
+          <span className="text-text-secondary">Fill Type: Partial</span>
         </div>
       </div>
     </div>
   )
 }
 
-// ─── Right Column: Trade + Chart + My Orders ───
-const RightColumn: React.FC<{ token: string }> = ({ token }) => {
-  const [tradeTab, setTradeTab] = useState<'buy' | 'sell'>('buy')
-  const [ordersTab, setOrdersTab] = useState<'filled' | 'open'>('filled')
-
+// ─── Right Column ─────────────────────────────────────────────────────────────
+const RightColumn: React.FC<{ market: HomeMarket }> = ({ market }) => {
+  const isUp = market.priceChange24h >= 0
   return (
     <div className="w-[384px] flex-shrink-0 flex flex-col gap-4 py-4">
-      {/* Trade Panel */}
-      <div className="flex flex-col gap-4 pb-6 border-b border-border-subtle">
-        <div className="flex items-center justify-between">
-          <h3 className="text-16 font-medium text-text-primary">Trade {token}</h3>
-          <span className="text-12 text-text-muted">Price</span>
-        </div>
+      {/* Trade Panel (Figma 37692:254729) */}
+      <TradePanel market={market} />
 
-        <div className="flex items-center gap-0 p-1 rounded-lg bg-bg-surface">
-          <button
-            onClick={() => setTradeTab('buy')}
-            className={clsx(
-              'flex-1 h-9 rounded-md text-14 font-medium transition-colors',
-              tradeTab === 'buy'
-                ? 'bg-buy text-bg-base'
-                : 'text-text-muted hover:text-text-secondary'
-            )}
-          >
-            Buy
-          </button>
-          <button
-            onClick={() => setTradeTab('sell')}
-            className={clsx(
-              'flex-1 h-9 rounded-md text-14 font-medium transition-colors',
-              tradeTab === 'sell'
-                ? 'bg-sell text-bg-base'
-                : 'text-text-muted hover:text-text-secondary'
-            )}
-          >
-            Sell
-          </button>
-        </div>
+      {/* Price Chart (Figma 37222:132675) — 384×336 */}
+      <MiniPriceChart isUp={isUp} />
 
-        <div className="w-full h-[120px] rounded-lg bg-bg-elevated flex items-center justify-center">
-          <span className="text-12 text-text-muted">Trade illustration</span>
-        </div>
-
-        <button className={clsx(
-          'w-full h-12 rounded-lg text-14 font-medium transition-colors',
-          tradeTab === 'buy'
-            ? 'bg-buy text-bg-base hover:bg-buy/90'
-            : 'bg-sell text-bg-base hover:bg-sell/90'
-        )}>
-          Trade (Taker)
-        </button>
-
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between text-12">
-            <span className="text-text-muted">Fees</span>
-            <span className="text-text-primary">-</span>
-          </div>
-          <div className="flex items-center justify-between text-12">
-            <span className="text-text-muted">Amount (Collateral)</span>
-            <span className="text-text-primary">-</span>
-          </div>
-          <div className="flex items-center justify-between text-12">
-            <span className="text-text-muted">Est. Received</span>
-            <span className="text-text-primary">-</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="w-full h-[336px] rounded-lg bg-bg-surface border border-border-subtle flex items-center justify-center">
-        <span className="text-14 text-text-muted">Price Chart — 384 × 336</span>
-      </div>
-
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-0">
-          <button
-            onClick={() => setOrdersTab('filled')}
-            className={clsx(
-              'px-3 h-8 text-14 font-medium transition-colors border-b-2',
-              ordersTab === 'filled'
-                ? 'text-text-primary border-accent'
-                : 'text-text-muted border-transparent hover:text-text-secondary'
-            )}
-          >
-            My Filled Orders
-            <span className={clsx(
-              'ml-1.5 px-1.5 py-0.5 rounded-full text-10 font-medium',
-              ordersTab === 'filled' ? 'bg-accent/20 text-accent' : 'bg-bg-elevated text-text-muted'
-            )}>
-              10
-            </span>
-          </button>
-          <button
-            onClick={() => setOrdersTab('open')}
-            className={clsx(
-              'px-3 h-8 text-14 font-medium transition-colors border-b-2',
-              ordersTab === 'open'
-                ? 'text-text-primary border-accent'
-                : 'text-text-muted border-transparent hover:text-text-secondary'
-            )}
-          >
-            My Open Orders
-            <span className={clsx(
-              'ml-1.5 px-1.5 py-0.5 rounded-full text-10 font-medium',
-              ordersTab === 'open' ? 'bg-accent/20 text-accent' : 'bg-bg-elevated text-text-muted'
-            )}>
-              10
-            </span>
-          </button>
-        </div>
-
-        <div className="w-full h-[540px] rounded-lg bg-bg-surface border border-border-subtle flex items-center justify-center">
-          <span className="text-14 text-text-muted">
-            {ordersTab === 'filled' ? 'Filled Orders List' : 'Open Orders List'} — 384 × 608
-          </span>
-        </div>
-      </div>
+      {/* My Orders (Figma 37225:131293) — 384×608 */}
+      <MyOrdersSection token={market.token} />
     </div>
   )
 }
@@ -552,9 +1201,9 @@ export const MarketDetailV2Page: React.FC = () => {
       <MarketHeader market={market} />
 
       <div className="flex gap-4">
-        <LeftColumn />
+        <LeftColumn market={market} />
         <div className="w-px bg-border-subtle self-stretch" />
-        <RightColumn token={market.token} />
+        <RightColumn market={market} />
       </div>
 
       <BottomStats />
