@@ -709,19 +709,23 @@ const LeftColumn: React.FC<{ market: HomeMarket }> = ({ market }) => {
 
   return (
     <div className="flex-1 min-w-0 flex flex-col gap-4 py-4">
-      {/* Trading Market header */}
-      <div className="flex items-center justify-between h-7">
-        <span className="text-16 font-medium text-text-primary">Trading Market</span>
-        <div className="flex items-center gap-2">
-          <span className="text-12 text-text-muted">Block Event</span>
-          <div className="w-8 h-4 rounded-full bg-bg-elevated relative cursor-pointer">
-            <div className="absolute left-0.5 top-0.5 w-3 h-3 rounded-full bg-text-muted transition-transform" />
-          </div>
-        </div>
-      </div>
-
-      {/* Filter tabs + period pills */}
+      {/* Trading Market header — Figma 37315:160544, h=48, SPACE_BETWEEN */}
       <div className="flex items-center justify-between h-12">
+        {/* Left: title + "How it work?" */}
+        <div className="flex flex-col gap-1">
+          <span className="text-18 font-medium text-text-primary">Trading Market</span>
+          <button className="flex items-center gap-0.5 text-12 text-text-muted hover:text-text-secondary transition-colors">
+            How it work?
+            <span className="w-4 h-4 flex items-center justify-center">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M4.5 3H9V7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M9 3L3 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </span>
+          </button>
+        </div>
+
+        {/* Right: Collateral / Fill Type / Order Type dropdowns + chart icon */}
         <div className="flex items-center gap-2">
           {(['Collateral', 'Fill Type', 'Order Type'] as const).map((tab) => {
             const tabKey: typeof activeTab = tab === 'Fill Type' ? 'fill' : tab === 'Order Type' ? 'order' : 'collateral'
@@ -730,19 +734,27 @@ const LeftColumn: React.FC<{ market: HomeMarket }> = ({ market }) => {
                 key={tab}
                 onClick={() => setActiveTab(tabKey)}
                 className={clsx(
-                  'flex items-center gap-1 px-3 h-8 rounded-md text-12 font-medium transition-colors',
-                  activeTab === tabKey
-                    ? 'bg-bg-elevated text-text-primary'
-                    : 'text-text-muted hover:text-text-secondary'
+                  'flex items-center gap-1.5 h-9 pl-4 pr-2 rounded-lg bg-bg-surface text-14 font-medium text-text-primary transition-colors hover:bg-bg-elevated',
+                  activeTab === tabKey && 'ring-1 ring-border-active',
                 )}
               >
                 {tab === 'Collateral' ? market.collateral : tab}
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-                </svg>
+                <span className="w-4 h-4 flex items-center justify-center">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M4 6L8 10L12 6" stroke="#7A7A83" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </span>
               </button>
             )
           })}
+
+          {/* Chart icon button — chart_line_fill, #5BD197 */}
+          <button className="flex items-center justify-center w-9 h-9 rounded-lg bg-bg-surface hover:bg-bg-elevated transition-colors">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M2 11L6.5 6L9.5 9.5L13 4" stroke="#5BD197" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M10.5 4H13V6.5" stroke="#5BD197" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
         </div>
       </div>
 
