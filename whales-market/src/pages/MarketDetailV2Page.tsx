@@ -1177,7 +1177,7 @@ const MiniPriceChart: React.FC<{ isUp?: boolean }> = ({ isUp = true }) => {
 }
 
 // ─── My Orders (Figma 37225:131293) ───────────────────────────────────────────
-const MyOrdersSection: React.FC<{ token: string }> = ({ token }) => {
+const MyOrdersSection: React.FC<{ token: string }> = ({ token: _token }) => {
   const [tab, setTab] = useState<'filled' | 'open'>('filled')
 
   const filledOrders = mockMyOrders.filter(o => o.status === 'filled')
