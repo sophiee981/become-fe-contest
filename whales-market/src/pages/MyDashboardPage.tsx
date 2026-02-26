@@ -383,19 +383,19 @@ const DashboardHeader: React.FC = () => {
   }
 
   return (
-    <div className="flex items-center justify-between py-6 border-b border-border-subtle">
-      <div className="flex items-center gap-8">
+    <div className="flex items-center justify-between py-6 border-b border-border-subtle min-w-0">
+      <div className="flex items-center gap-6 shrink-0">
         {/* Wallet icon + address */}
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-full bg-bg-elevated flex items-center justify-center">
+          <div className="w-11 h-11 rounded-full bg-bg-elevated flex items-center justify-center shrink-0">
             <WalletIcon />
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col gap-0.5">
             <div className="flex items-center gap-1.5">
-              <span className="text-18 font-medium text-text-primary">GQ98...iA5Y</span>
+              <span className="text-18 font-semibold text-text-primary whitespace-nowrap">GQ98...iA5Y</span>
               <button
                 onClick={handleCopy}
-                className="text-text-muted hover:text-text-secondary transition-colors relative"
+                className="text-text-muted hover:text-text-secondary transition-colors relative shrink-0"
                 title="Copy address"
               >
                 <CopyIcon />
@@ -406,31 +406,34 @@ const DashboardHeader: React.FC = () => {
                 )}
               </button>
             </div>
-            <span className="text-12 text-text-muted">Open in Explorer</span>
+            <button className="flex items-center gap-1 text-12 text-text-muted hover:text-text-secondary transition-colors w-fit">
+              <span className="whitespace-nowrap">Open in Explorer</span>
+              <ExternalLinkIcon />
+            </button>
           </div>
         </div>
 
-        <div className="w-px h-8 bg-border-default" />
+        <div className="w-px h-9 bg-border-default shrink-0" />
 
         {/* Stats */}
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-6">
           <div className="flex flex-col gap-0.5">
-            <span className="text-12 text-text-muted">Total Trading Vol.</span>
-            <span className="text-12 text-text-primary">$18.72K</span>
+            <span className="text-12 text-text-muted whitespace-nowrap">Total Trading Vol.</span>
+            <span className="text-12 font-medium text-text-primary whitespace-nowrap">$18.72K</span>
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-12 text-text-muted">Discount Tier</span>
-            <span className="text-12 text-success">-0% Fee</span>
+            <span className="text-12 text-text-muted whitespace-nowrap">Discount Tier</span>
+            <span className="text-12 font-medium text-success whitespace-nowrap">-0% Fee</span>
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-12 text-text-muted">XWhales Holding</span>
-            <span className="text-12 text-text-primary">0.00</span>
+            <span className="text-12 text-text-muted whitespace-nowrap">XWhales Holding</span>
+            <span className="text-12 font-medium text-text-primary whitespace-nowrap">0.00</span>
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-12 text-text-muted">Linked Wallets</span>
-            <div className="flex items-center gap-2">
+            <span className="text-12 text-text-muted whitespace-nowrap">Linked Wallets</span>
+            <div className="flex items-center gap-1.5">
               {['0x6...4cd', 'GQ9...A5Y', 'sei...2m6'].map(w => (
-                <span key={w} className="px-1.5 py-0.5 rounded bg-bg-elevated text-12 text-text-primary">
+                <span key={w} className="px-1.5 py-0.5 rounded bg-bg-elevated text-12 text-text-primary whitespace-nowrap">
                   {w}
                 </span>
               ))}
@@ -439,7 +442,7 @@ const DashboardHeader: React.FC = () => {
         </div>
       </div>
 
-      <button className="flex items-center justify-center px-4 h-9 rounded-lg bg-text-primary text-text-inverse text-14 font-medium hover:bg-neutral-200 transition-colors">
+      <button className="shrink-0 flex items-center justify-center px-5 h-9 rounded-lg bg-text-primary text-text-inverse text-14 font-medium hover:bg-neutral-200 transition-colors whitespace-nowrap ml-4">
         Link Wallet
       </button>
     </div>
