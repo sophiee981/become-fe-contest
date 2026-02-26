@@ -778,30 +778,28 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({ options, value, onChang
 }
 
 const COLLATERAL_OPTIONS: FilterOption[] = [
-  { id: 'usdc',  label: 'USDC'  },
-  { id: 'usdt',  label: 'USDT'  },
-  { id: 'sol',   label: 'SOL'   },
-  { id: 'eth',   label: 'ETH'   },
+  { id: 'all',   label: 'Collateral' },
+  { id: 'usdc',  label: 'USDC'       },
+  { id: 'usdt',  label: 'USDT'       },
+  { id: 'sol',   label: 'SOL'        },
+  { id: 'eth',   label: 'ETH'        },
 ]
 
 const FILL_TYPE_OPTIONS: FilterOption[] = [
-  { id: 'all',     label: 'All'          },
+  { id: 'all',     label: 'Fill Type'    },
   { id: 'full',    label: 'Full Fill'    },
   { id: 'partial', label: 'Partial Fill' },
 ]
 
 const ORDER_TYPE_OPTIONS: FilterOption[] = [
-  { id: 'all',    label: 'All'    },
-  { id: 'limit',  label: 'Limit'  },
-  { id: 'market', label: 'Market' },
+  { id: 'all',    label: 'Order Type' },
+  { id: 'limit',  label: 'Limit'      },
+  { id: 'market', label: 'Market'     },
 ]
 
 // ─── Left Column ─────────────────────────────────────────────────────────────
 const LeftColumn: React.FC<{ market: HomeMarket }> = ({ market }) => {
-  const defaultCollateral = COLLATERAL_OPTIONS.find(
-    o => o.id === market.collateral.toLowerCase(),
-  )?.id ?? 'usdc'
-  const [collateral, setCollateral] = useState(defaultCollateral)
+  const [collateral, setCollateral] = useState('all')
   const [fillType,   setFillType  ] = useState('all')
   const [orderType,  setOrderType ] = useState('all')
 
