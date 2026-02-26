@@ -151,33 +151,41 @@ const CHART_DATA_ALL = [
 ]
 
 // ─── Breadcrumb (Figma node 37222:132667) ───
+// pathway+delivery: 1376×16px, horizontal, gap=16px
+// pathway sub-frame: horizontal, gap=4px between items
+// icon-slot: 16×16px with 2px inset → chevron 12×12, color #7a7a83
+// text: 12px/400/lh-16px — inactive=#b4b4ba, active=#f9f9fa
+// Delivery Scenarios removed per user request
 const Breadcrumb: React.FC<{ token: string }> = ({ token }) => (
-  <div className="flex items-center justify-between h-4">
-    <nav className="flex items-center gap-0">
-      <Link to="/" className="text-12 text-text-secondary hover:text-text-primary transition-colors">
+  <div className="flex items-center h-4">
+    <nav className="flex items-center gap-1">
+      <Link
+        to="/"
+        className="text-[12px] font-[400] leading-[16px] text-[#b4b4ba] hover:text-[#f9f9fa] transition-colors whitespace-nowrap"
+      >
         Whales.Market
       </Link>
-      <span className="w-4 h-4 flex items-center justify-center">
+      {/* icon-slot 16×16 → chevron 12×12, color #7a7a83 */}
+      <span className="w-4 h-4 flex items-center justify-center shrink-0">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-          <path d="M4.5 2.5L7.5 6L4.5 9.5" stroke="#B4B4BA" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M4.5 2.5L7.5 6L4.5 9.5" stroke="#7a7a83" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </span>
-      <Link to="/" className="text-12 text-text-secondary hover:text-text-primary transition-colors">
+      <Link
+        to="/"
+        className="text-[12px] font-[400] leading-[16px] text-[#b4b4ba] hover:text-[#f9f9fa] transition-colors whitespace-nowrap"
+      >
         Pre-market
       </Link>
-      <span className="w-4 h-4 flex items-center justify-center">
+      <span className="w-4 h-4 flex items-center justify-center shrink-0">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-          <path d="M4.5 2.5L7.5 6L4.5 9.5" stroke="#B4B4BA" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M4.5 2.5L7.5 6L4.5 9.5" stroke="#7a7a83" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </span>
-      <span className="text-12 text-text-primary">{token}</span>
+      <span className="text-[12px] font-[400] leading-[16px] text-[#f9f9fa] whitespace-nowrap">
+        {token}
+      </span>
     </nav>
-    <button className="flex items-center gap-1 text-12 font-medium text-success hover:text-success/80 transition-colors">
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-        <path d="M3 9L9 3M9 3H4.5M9 3V7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-      Delivery Scenarios
-    </button>
   </div>
 )
 
@@ -1194,7 +1202,8 @@ export const MarketDetailV2Page: React.FC = () => {
 
   return (
     <div className="max-w-[1280px] mx-auto px-4 md:px-6 lg:px-8">
-      <div className="py-3">
+      {/* pathway+delivery wrapper: Figma body gap=16px top, gap=16px before market-header */}
+      <div className="pt-4 pb-4">
         <Breadcrumb token={market.token} />
       </div>
 
