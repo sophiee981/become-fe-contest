@@ -242,48 +242,51 @@ const MarketHeader: React.FC<{ market: HomeMarket }> = ({ market }) => {
           </div>
         </div>
 
-        {/* price */}
-        <div className="flex flex-col">
-          <span className="text-18 font-medium text-text-primary">${fmtPrice(market.price)}</span>
-          <div className="py-0.5">
+        {/* price + stats wrapped in items-end so all values bottom-align with % change */}
+        <div className="flex items-end gap-8">
+
+          {/* price — gap-1 (4px) between price and % change */}
+          <div className="flex flex-col gap-1">
+            <span className="text-18 font-medium text-text-primary">${fmtPrice(market.price)}</span>
             <span className={clsx('text-12', market.priceChange24h >= 0 ? 'text-success' : 'text-danger')}>
               {market.priceChange24h >= 0 ? '+' : ''}{market.priceChange24h.toFixed(2)}%
             </span>
           </div>
-        </div>
 
-        {/* stats: 3 items */}
-        <div className="flex items-start gap-8">
-          <div className="flex flex-col gap-1">
-            <span className="text-12 text-text-muted border-b border-dashed border-border-default pb-px cursor-help whitespace-nowrap">
-              24h Vol.
-            </span>
-            <div className="flex items-center gap-1">
-              <span className="text-12 text-text-primary whitespace-nowrap">{fmtVol(market.vol24h)}</span>
-              <span className={clsx('text-12 whitespace-nowrap', market.vol24hChange >= 0 ? 'text-success' : 'text-danger')}>
-                {fmtVolChange(market.vol24hChange)}
+          {/* stats: 3 items — items-end aligns all value rows with price % change */}
+          <div className="flex items-end gap-8">
+            <div className="flex flex-col gap-1">
+              <span className="text-12 text-text-muted border-b border-dashed border-border-default pb-px cursor-help whitespace-nowrap">
+                24h Vol.
+              </span>
+              <div className="flex items-center gap-1">
+                <span className="text-12 text-text-primary whitespace-nowrap">{fmtVol(market.vol24h)}</span>
+                <span className={clsx('text-12 whitespace-nowrap', market.vol24hChange >= 0 ? 'text-success' : 'text-danger')}>
+                  {fmtVolChange(market.vol24hChange)}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="text-12 text-text-muted border-b border-dashed border-border-default pb-px cursor-help whitespace-nowrap">
+                Total Vol.
+              </span>
+              <span className="text-12 text-text-primary whitespace-nowrap">{fmtVol(market.totalVol)}</span>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="text-12 text-text-muted border-b border-dashed border-border-default pb-px cursor-help whitespace-nowrap">
+                Countdown
+              </span>
+              <span className={clsx(
+                'inline-flex items-center self-start px-2 py-0.5 rounded-full text-10 font-medium uppercase whitespace-nowrap',
+                countdownVariant,
+              )}>
+                {countdownLabel}
               </span>
             </div>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <span className="text-12 text-text-muted border-b border-dashed border-border-default pb-px cursor-help whitespace-nowrap">
-              Total Vol.
-            </span>
-            <span className="text-12 text-text-primary whitespace-nowrap">{fmtVol(market.totalVol)}</span>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <span className="text-12 text-text-muted border-b border-dashed border-border-default pb-px cursor-help whitespace-nowrap">
-              Countdown
-            </span>
-            <span className={clsx(
-              'inline-flex items-center self-start px-2 py-1 rounded-full text-10 font-medium uppercase whitespace-nowrap',
-              countdownVariant,
-            )}>
-              {countdownLabel}
-            </span>
-          </div>
         </div>
       </div>
 
