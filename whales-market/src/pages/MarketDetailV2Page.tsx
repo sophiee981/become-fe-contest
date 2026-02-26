@@ -211,7 +211,7 @@ const MarketHeader: React.FC<{ market: HomeMarket }> = ({ market }) => {
   return (
     <div className="flex items-center gap-4 py-6 border-b border-border-subtle">
       {/* token-info: flex-1, gap-32 */}
-      <div className="flex-1 flex items-center gap-8">
+      <div className="flex-1 flex items-start gap-8">
         {/* token: icon + name */}
         <div className="flex items-center gap-2">
           <div className="relative w-[44px] h-[44px] flex items-center justify-center">
@@ -253,40 +253,32 @@ const MarketHeader: React.FC<{ market: HomeMarket }> = ({ market }) => {
         </div>
 
         {/* stats: 3 items */}
-        <div className="flex items-center gap-8">
-          <div className="flex flex-col">
-            <div className="py-1.5">
-              <span className="text-12 text-text-muted border-b border-dashed border-border-default pb-px cursor-help">
-                24h Vol.
-              </span>
-            </div>
-            <div className="flex items-center gap-1 py-0.5">
-              <span className="text-12 text-text-primary">{fmtVol(market.vol24h)}</span>
-              <span className={clsx('text-12', market.vol24hChange >= 0 ? 'text-success' : 'text-danger')}>
+        <div className="flex items-start gap-8">
+          <div className="flex flex-col gap-1">
+            <span className="text-12 text-text-muted border-b border-dashed border-border-default pb-px cursor-help whitespace-nowrap">
+              24h Vol.
+            </span>
+            <div className="flex items-center gap-1">
+              <span className="text-12 text-text-primary whitespace-nowrap">{fmtVol(market.vol24h)}</span>
+              <span className={clsx('text-12 whitespace-nowrap', market.vol24hChange >= 0 ? 'text-success' : 'text-danger')}>
                 {fmtVolChange(market.vol24hChange)}
               </span>
             </div>
           </div>
 
-          <div className="flex flex-col">
-            <div className="py-1.5">
-              <span className="text-12 text-text-muted border-b border-dashed border-border-default pb-px cursor-help">
-                Total Vol.
-              </span>
-            </div>
-            <div className="py-0.5">
-              <span className="text-12 text-text-primary">{fmtVol(market.totalVol)}</span>
-            </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-12 text-text-muted border-b border-dashed border-border-default pb-px cursor-help whitespace-nowrap">
+              Total Vol.
+            </span>
+            <span className="text-12 text-text-primary whitespace-nowrap">{fmtVol(market.totalVol)}</span>
           </div>
 
-          <div className="flex flex-col">
-            <div className="py-1.5">
-              <span className="text-12 text-text-muted border-b border-dashed border-border-default pb-px cursor-help">
-                Countdown
-              </span>
-            </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-12 text-text-muted border-b border-dashed border-border-default pb-px cursor-help whitespace-nowrap">
+              Countdown
+            </span>
             <span className={clsx(
-              'inline-flex items-center self-start px-2 py-1 rounded-full text-10 font-medium uppercase',
+              'inline-flex items-center self-start px-2 py-1 rounded-full text-10 font-medium uppercase whitespace-nowrap',
               countdownVariant,
             )}>
               {countdownLabel}
@@ -346,14 +338,6 @@ const MarketHeader: React.FC<{ market: HomeMarket }> = ({ market }) => {
             </button>
           </div>
 
-          {/* More */}
-          <button className="flex items-center justify-center w-9 h-9 rounded-lg bg-bg-surface hover:bg-bg-hover transition-colors">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <circle cx="4" cy="8" r="1.25" fill="#F9F9FA"/>
-              <circle cx="8" cy="8" r="1.25" fill="#F9F9FA"/>
-              <circle cx="12" cy="8" r="1.25" fill="#F9F9FA"/>
-            </svg>
-          </button>
         </div>
 
         <div className="w-px h-[18px] bg-neutral-800" />
