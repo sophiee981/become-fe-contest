@@ -255,7 +255,7 @@ const MarketHeader: React.FC<{ market: HomeMarket }> = ({ market }) => {
 
           {/* stats: 3 items — items-end aligns all value rows with price % change */}
           <div className="flex items-end gap-8">
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1.5">
               <span className="text-12 text-text-muted border-b border-dashed border-border-default pb-px cursor-help whitespace-nowrap">
                 24h Vol.
               </span>
@@ -267,14 +267,14 @@ const MarketHeader: React.FC<{ market: HomeMarket }> = ({ market }) => {
               </div>
             </div>
 
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1.5">
               <span className="text-12 text-text-muted border-b border-dashed border-border-default pb-px cursor-help whitespace-nowrap">
                 Total Vol.
               </span>
               <span className="text-12 text-text-primary whitespace-nowrap">{fmtVol(market.totalVol)}</span>
             </div>
 
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1.5">
               <span className="text-12 text-text-muted border-b border-dashed border-border-default pb-px cursor-help whitespace-nowrap">
                 Countdown
               </span>
