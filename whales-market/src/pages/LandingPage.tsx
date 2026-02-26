@@ -1275,10 +1275,7 @@ const RecentTradesTable: React.FC<{ trades: HomeRecentTrade[]; newId: string | n
                 )}
                 onClick={() => col.field && handleSort(col.field)}
               >
-                <span className={clsx(
-                  'inline-flex items-center gap-1',
-                  col.align === 'right' && 'flex-row-reverse',
-                )}>
+                <span className="inline-flex items-center gap-1">
                   {col.label}
                   {col.field && (
                     <TableSortIcon field={col.field} sortKey={sortKey} sortDir={sortDir} />
