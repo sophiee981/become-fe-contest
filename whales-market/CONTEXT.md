@@ -1,7 +1,7 @@
 # CONTEXT.md — Whales Market Session Handoff
 
 > File for AI session continuity. Read this **before** touching any code.
-> Last updated: **2026-02-26** (session 4: realtime simulation, TS build fix, Vercel deploy)
+> Last updated: **2026-02-26** (session 5: Market Header pixel-perfect, gradient borders, MyDashboard Recent Trades polish)
 
 ## 0. Live Deployment
 
@@ -65,6 +65,8 @@ be1feec  Fix: bind Vite dev server to 127.0.0.1 to resolve connection refused
 e1ec743  Landing: realtime chart + live trade stream simulation
 79d5e9b  Fix TypeScript build errors for Vercel deploy
 236525b  Add vercel.json for SPA routing (★ LIVE on Vercel)
+ed6ebc3  Recent Trades: add column sort + real Figma animal icons + better USDT logo
+1dbf520  Fix sort icon position: always after header label (remove flex-row-reverse)
 ```
 
 ---
@@ -125,11 +127,11 @@ src/
 │       └── icons/
 │           └── DownFillIcon.tsx
 ├── pages/
-│   ├── LandingPage.tsx         # (1587 lines) ★ MAIN PAGE — details in Section 5
+│   ├── LandingPage.tsx         # (1563 lines) ★ MAIN PAGE — details in Section 5
 │   ├── MarketListPage.tsx      # Market grid + search/filter
 │   ├── MarketDetailPage.tsx    # OLD Market Detail (order book + trade form + confirm modal)
-│   ├── MarketDetailV2Page.tsx  # (472 lines) ★ NEW Market Detail V2 — header pixel-perfect
-│   ├── MyDashboardPage.tsx     # (1011 lines) ★ NEW Dashboard page at /dashboard
+│   ├── MarketDetailV2Page.tsx  # (563 lines) ★ NEW Market Detail V2 — header pixel-perfect, left/right col frames
+│   ├── MyDashboardPage.tsx     # (1014 lines) ★ NEW Dashboard page at /dashboard
 │   ├── PortfolioPage.tsx
 │   ├── CreateListingPage.tsx
 │   ├── ProfilePage.tsx
@@ -222,7 +224,7 @@ export interface HomeRecentTrade {
 
 Animal assignments per Figma: rt-1=shark, rt-2=whale, rt-3→rt-8=shark, rt-9→rt-10=shrimp.
 
-**⚠️ PENDING**: SVG path shapes for animal icons are approximations (hand-crafted). Reference screenshots of exact Figma shapes saved at `/tmp/figma_icons_scaled.png`. Colors are confirmed correct: shark=#0A71CD, whale=#27C9D8, shrimp=#FF8F3C.
+**✅ DONE (session 5)**: Animal icons now use real Figma SVG exports loaded as `<img>` from `src/assets/images/shark-icon.svg`, `whale-icon.svg`, `shrimp-icon.svg`. No more hand-crafted paths. Column sort also added (all 5 sortable cols: Time, Price, Amount, Collateral, Tx.ID). Sort icon position fixed — icon always after label text (no `flex-row-reverse`).
 
 ### Ended Tab — Current State (DONE ✅)
 
@@ -282,37 +284,48 @@ Flow:
 
 ---
 
-## 8. MarketDetailV2Page — `/market-v2/:id` (472 lines)
+## 8. MarketDetailV2Page — `/market-v2/:id` (563 lines)
 
 ### Layout Frame
 
-Body container: `max-w-[1440px]` centered, inner `px-4` = 1376px content area.
+Body container: `max-w-[1280px]` centered, inner `px-4` = content area.
+Page is now **dynamic** — `useParams()` + `findMarketById(id)` matches route → market data across all 3 data sources.
 
 ### Section Status
 
 | Section | Status |
 |---------|--------|
 | Breadcrumb | ✅ Built — Whales.Market > Pre-market > SKATE + "Delivery Scenarios" link |
-| Market Header | ✅ Pixel-perfect — token info (SKATE, $0.0045, stats) + buttons |
-| Left Column frame | ✅ Frame — placeholder blocks |
-| Right Column frame | ✅ Frame — placeholder blocks |
+| Market Header | ✅ Pixel-perfect — confirmed via preview_inspect |
+| Left Column — block-title | ✅ Frame with tab buttons (Collateral/Fill Type/Order Type) + period pills (2d/1w/1M/All) |
+| Left Column — Chart | ⏳ Placeholder `h-[424px]` |
+| Left Column — Order Book | ⏳ Placeholder `h-[742px]` |
+| Left Column — Recent Trades | ⏳ Placeholder `h-[480px]` |
+| Right Column — Trade panel | ✅ Frame (Buy/Sell tabs, Trade (Taker) button) |
+| Right Column — Price Chart | ⏳ Placeholder `h-[336px]` |
+| Right Column — My Orders | ✅ Frame (Filled/Open tabs) |
 | Bottom Stats | ✅ Built |
 
-### Market Header Details
+### Market Header — Confirmed Pixel-Perfect ✅
 
-**Left — token-info:** Logo + chain badge + "SKATE" (18/500) + "Skate Chain" (12/400/#7A7A83) + price + change + stats (24h Vol, Total Vol, Countdown pill)
+**Left — token-info:** Logo + chain badge + token name (18/500) + tokenName subtitle (12/400/#7A7A83) + price + change% + stats row (24h Vol, Total Vol, Countdown pill)
 
-**Right — buttons:** "About Skate" dropdown | "Airdrop Checker" | "Earn 50% Fee" | More icon | Divider | "Create Order" (bg #000)
+**Right — buttons (all `flex-shrink-0 whitespace-nowrap`):**
+- "About {token}" split button (label + chevron-down) with `border border-neutral-800`
+- **Airdrop Checker** — `p-[1px]` gradient border wrapper `from-[#86ddb1] to-[#15af77]`, inner `bg-bg-base`, gradient text `from-primary-300 to-primary-500`
+- **Earn 50% Fee** — `p-[1px]` gradient border wrapper `from-[#cdba35] to-[#ef9632]`, inner `bg-bg-base`, gradient text `from-[#ff8731] to-[#bfc736]`
+- More `...` icon button
+- Divider `w-px h-[18px] bg-neutral-800`
+- **Create Order** — `bg-neutral-50 text-text-inverse hover:bg-neutral-200`
 
-### PENDING WORK — Sections to Build (in order)
+### PENDING WORK — Left Column sections to build (in order)
 
-1. **Chart section** (Figma 37315:161696) — 928x424
-2. **Order Book table** (Figma 37315:161694) — 928x742
-3. **Recent Trades table** (Figma 37315:189288) — 928x532
-4. **Trade Panel** (Figma 37692:254729) — 384x456, Buy/Sell form
-5. **Price Chart** (Figma 37222:132675) — 384x336
-6. **My Orders** (Figma 37225:131293) — 384x608, Filled/Open tabs
-7. **Mock data** — order book, trades, user orders
+1. **Chart section** (Figma 37315:161696) — 928×424: toolbar (period: 1d/7d/30d, type: Price/FDV) + SVG price line + volume bars
+2. **Order Book table** (Figma 37315:161694) — 928×742: sell-orders (448px) + buy-orders (448px), fill progress bars, action buttons
+3. **Recent Trades section** — extract `RecentTradesTable` from `LandingPage.tsx` to `src/components/market/RecentTradesTable.tsx` (shared), wire into LeftColumn
+4. **Trade Panel** (Figma 37692:254729) — improve right column Buy/Sell form
+5. **Price Chart** (Figma 37222:132675) — 384×336
+6. **My Orders** (Figma 37225:131293) — 384×608, Filled/Open tabs with mock data
 
 ---
 
@@ -430,11 +443,16 @@ Figma URL pattern: `https://www.figma.com/design/mrTOtq806N1EFg8NOnsj99/WhalesMa
 
 ## 14. Pending Work (priority order)
 
-1. **Animal icons shape fix** — shark/whale/shrimp SVG paths are hand-crafted approximations. Exact Figma screenshots at `/tmp/figma_icons_scaled.png`. Colors confirmed: shark=#0A71CD, whale=#27C9D8, shrimp=#FF8F3C. Node IDs: 36017:127255 / 36017:127244 / 36017:127247.
+1. **MarketDetailV2Page — Left Column** — next session should build these 3 sections in order:
+   - Extract `RecentTradesTable` + helpers (TabBadge, TableSortIcon, AnimalIcon, CollateralTokenIcon, TOKEN_COLORS, TOKEN_LOGOS, parseTradeNum) from LandingPage into `src/components/market/RecentTradesTable.tsx`
+   - Update LandingPage.tsx to import from shared component
+   - Build Chart section (Figma 37315:161696): toolbar + SVG price line + volume bars
+   - Build Order Book (Figma 37315:161694): sell/buy columns, fill bars, action buttons
+   - Wire `<RecentTradesTable>` with live trade simulation (same logic as LandingPage)
 
 2. **Upcoming Tab — investor avatars** — images in assets (`investor1-5.png`), need to wire into `mockUpcomingListings.investorAvatars[]` in homeData.ts.
 
-3. **MarketDetailV2Page** — 6 sections to build (Chart, Order Book, Recent Trades, Trade Panel, Price Chart, My Orders). See Section 8.
+3. **MarketDetailV2Page — Right Column** — improve Trade Panel, Price Chart, My Orders sections.
 
 4. **MyDashboardPage** — needs Figma review and polish.
 
