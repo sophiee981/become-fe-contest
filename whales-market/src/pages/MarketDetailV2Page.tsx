@@ -354,205 +354,452 @@ const MarketHeader: React.FC<{ market: HomeMarket }> = ({ market }) => {
   )
 }
 
-// ─── Price Line Chart (Figma 37315:161696) ────────────────────────────────────
+// ─── Price Line Chart (Figma 39425:192309) ────────────────────────────────────
 type ChartPeriod = '1d' | '7d' | '30d' | 'All'
 type ChartType   = 'Price' | 'FDV'
 
 interface ChartPoint { t: string; p: number; v: number }
 
-const PriceLineChart: React.FC<{ market: HomeMarket }> = ({ market }) => {
-  const [period, setPeriod] = useState<ChartPeriod>('All')
+const PriceLineChart: React.FC<{ market: HomeMarket }> = ({ market: _market }) => {
+  const [period,    setPeriod   ] = useState<ChartPeriod>('1d')
   const [chartType, setChartType] = useState<ChartType>('Price')
-  const [hoverIdx, setHoverIdx] = useState<number | null>(null)
+  const [hoverIdx,  setHoverIdx ] = useState<number | null>(null)
+  const [hoverPos,  setHoverPos ] = useState<{ x: number; y: number } | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const chartAreaRef = useRef<HTMLDivElement>(null)
 
   // slice data by period
+  // period change → trigger loading demo
+  const handlePeriodChange = (p: ChartPeriod) => {
+    if (p === period) return
+    setIsLoading(true)
+    setHoverIdx(null)
+    setHoverPos(null)
+    setTimeout(() => { setPeriod(p); setIsLoading(false) }, 700)
+  }
+
   const data: ChartPoint[] = useMemo(() => {
     const slices: Record<ChartPeriod, number> = { '1d': 8, '7d': 12, '30d': 18, All: 24 }
     return CHART_DATA_ALL.slice(-slices[period])
   }, [period])
 
-  // scale — use p values (multiply by 0.01 to get real price)
-  const W = 900; const H_CHART = 280; const H_VOL = 60; const H_TOTAL = H_CHART + H_VOL + 20
-  const minP = Math.min(...data.map(d => d.p))
-  const maxP = Math.max(...data.map(d => d.p))
-  const padP = (maxP - minP) * 0.1
-  const domainMin = minP - padP
-  const domainMax = maxP + padP
-  const maxV = Math.max(...data.map(d => d.v))
+  const isEmpty = data.length === 0
 
-  const xStep = W / (data.length - 1)
-  const yPrice = (p: number) => H_CHART - ((p - domainMin) / (domainMax - domainMin)) * (H_CHART - 20) - 10
-  const yVol   = (v: number) => H_VOL - (v / maxV) * (H_VOL - 4)
+  // SVG viewBox dims — Figma: chart-graph 820×240 / 820×120, axis padding 32px T+B
+  const VW = 820; const VH_P = 240; const VH_V = 120; const PAD = 32
 
-  // Build SVG path for price line
-  const linePath = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${i * xStep} ${yPrice(d.p)}`).join(' ')
-  const areaPath = `${linePath} L ${(data.length - 1) * xStep} ${H_CHART} L 0 ${H_CHART} Z`
+  const minP   = isEmpty ? 0   : Math.min(...data.map(d => d.p))
+  const maxP   = isEmpty ? 1   : Math.max(...data.map(d => d.p))
+  const padP   = (maxP - minP) * 0.15
+  const domMin = minP - padP
+  const domMax = maxP + padP
+  const maxV   = isEmpty ? 1   : Math.max(...data.map(d => d.v))
 
-  const hoveredData = hoverIdx !== null ? data[hoverIdx] : data[data.length - 1]
-  const isUp = data[data.length - 1].p >= data[0].p
+  const xStep  = VW / Math.max(data.length - 1, 1)
+  // yP: price → SVG y (PAD from top, PAD from bottom inside VH_P)
+  const yP = (p: number) => PAD + (1 - (p - domMin) / (domMax - domMin)) * (VH_P - PAD * 2)
+
+  const linePath = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${i * xStep} ${yP(d.p)}`).join(' ')
+  const areaPath = `${linePath} L ${(data.length - 1) * xStep} ${VH_P} L 0 ${VH_P} Z`
+
+  const lastIdx    = Math.max(0, data.length - 1)
+  const lastPt     = data[lastIdx]
+  const lastY      = isEmpty ? VH_P / 2 : yP(lastPt.p)
+  const pctChange  = isEmpty ? 0 : ((lastPt.p - data[0].p) / data[0].p) * 100
+
+  // Hover
+  const hoverData = hoverIdx !== null ? data[hoverIdx] : null
+  const hoverX    = hoverIdx !== null ? hoverIdx * xStep : null
+  const hoverYP   = hoverData ? yP(hoverData.p) : null
+
+  // 5 Y-axis rows (top → bottom = domMax → domMin), matching SVG grid lines
+  const yRows = [0, 0.25, 0.5, 0.75, 1].map(f => ({
+    price: domMax - f * (domMax - domMin),
+    svgY:  PAD + f * (VH_P - PAD * 2),
+  }))
+
+  // Vertical grid indices (show ~5 lines)
+  const vGridIdxs = data
+    .map((_, i) => i)
+    .filter(i => i % Math.ceil(data.length / 5) === 0)
+
+  // Tooltip left position — flip when near right edge
+  const tooltipLeft = hoverPos
+    ? (hoverPos.x > (chartAreaRef.current?.clientWidth ?? 800) - 220
+        ? hoverPos.x - 204
+        : hoverPos.x + 12)
+    : 0
+
+  const handleSvgMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const idx  = Math.round(((e.clientX - rect.left) / rect.width) * (data.length - 1))
+    setHoverIdx(Math.max(0, Math.min(data.length - 1, idx)))
+    if (chartAreaRef.current) {
+      const cr = chartAreaRef.current.getBoundingClientRect()
+      setHoverPos({ x: e.clientX - cr.left, y: e.clientY - cr.top })
+    }
+  }
+  const handleSvgLeave = () => { setHoverIdx(null); setHoverPos(null) }
 
   return (
-    <div className="flex flex-col gap-0 border border-border-subtle rounded-lg bg-bg-surface overflow-hidden">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 h-12 border-b border-border-subtle">
+    <div className="flex flex-col border border-[#1B1B1C] rounded-lg overflow-hidden">
+
+      {/* ── Header bar: 36px, period + type toggles + timestamp ── */}
+      <div
+        className="flex items-center gap-3 border-b border-[#1B1B1C] shrink-0"
+        style={{ height: 36, paddingLeft: 8, paddingRight: 16, paddingTop: 8, paddingBottom: 8 }}
+      >
+        {/* Period selector — 1d / 7d / 30d */}
         <div className="flex items-center gap-1">
-          {(['1d', '7d', '30d', 'All'] as ChartPeriod[]).map(p => (
+          {(['1d', '7d', '30d'] as const).map(p => (
             <button
               key={p}
-              onClick={() => setPeriod(p)}
+              onClick={() => handlePeriodChange(p)}
               className={clsx(
-                'px-3 h-7 rounded text-12 font-medium transition-colors',
-                period === p
-                  ? 'bg-bg-elevated text-text-primary'
-                  : 'text-text-muted hover:text-text-secondary',
+                'px-2 py-0.5 rounded text-12 font-[500] leading-[16px] transition-colors duration-150',
+                period === p ? 'bg-[#1B1B1C] text-[#F9F9FA]' : 'text-[#7A7A83] hover:text-[#F9F9FA]',
               )}
-            >
-              {p}
-            </button>
+            >{p}</button>
           ))}
         </div>
-        <div className="flex items-center gap-1 p-0.5 bg-bg-elevated rounded-lg">
+
+        {/* Vertical divider */}
+        <div className="w-px h-5 bg-[#1B1B1C] shrink-0" />
+
+        {/* Price / FDV toggle */}
+        <div className="flex items-center gap-1">
           {(['Price', 'FDV'] as ChartType[]).map(t => (
             <button
               key={t}
               onClick={() => setChartType(t)}
               className={clsx(
-                'px-3 h-7 rounded-md text-12 font-medium transition-colors',
-                chartType === t
-                  ? 'bg-bg-base text-text-primary shadow-sm'
-                  : 'text-text-muted hover:text-text-secondary',
+                'px-2 py-0.5 rounded text-12 font-[500] leading-[16px] transition-colors duration-150',
+                chartType === t ? 'bg-[#1B1B1C] text-[#F9F9FA]' : 'text-[#7A7A83] hover:text-[#F9F9FA]',
               )}
-            >
-              {t}
-            </button>
+            >{t}</button>
           ))}
+        </div>
+
+        {/* Timestamp — right */}
+        <div className="ml-auto flex items-center gap-1 shrink-0">
+          <span className="text-12 font-[400] leading-[16px] text-[#7A7A83]">Time</span>
+          <span className="text-12 font-[400] leading-[16px] text-[#F9F9FA] tabular-nums">
+            {hoverData ? hoverData.t : (lastPt?.t ?? '—')}
+          </span>
         </div>
       </div>
 
-      {/* Price info row */}
-      <div className="flex items-center gap-4 px-4 pt-3 pb-2">
-        <span className="text-20 font-medium text-text-primary tabular-nums">
-          ${(hoveredData.p * 0.01).toFixed(4)}
-        </span>
-        <span className={clsx('text-12', isUp ? 'text-success' : 'text-danger')}>
-          {isUp ? '+' : ''}{(((data[data.length-1].p - data[0].p) / data[0].p) * 100).toFixed(2)}%
-        </span>
-        {hoverIdx !== null && (
-          <span className="text-12 text-text-muted ml-auto">{hoveredData.t}</span>
-        )}
-      </div>
+      {/* ── Chart body (relative, for overlays) ── */}
+      <div className="relative flex flex-col" ref={chartAreaRef}>
 
-      {/* SVG chart */}
-      <div className="px-2 pb-0">
-        <svg
-          width="100%"
-          viewBox={`0 0 ${W} ${H_TOTAL}`}
-          preserveAspectRatio="none"
-          className="w-full"
-          style={{ height: 330 }}
-          onMouseLeave={() => setHoverIdx(null)}
-          onMouseMove={e => {
-            const rect = (e.currentTarget as SVGElement).getBoundingClientRect()
-            const x = ((e.clientX - rect.left) / rect.width) * W
-            const idx = Math.round(x / xStep)
-            setHoverIdx(Math.max(0, Math.min(data.length - 1, idx)))
-          }}
-        >
-          <defs>
-            <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={isUp ? '#5BD197' : '#FD5E67'} stopOpacity="0.18" />
-              <stop offset="100%" stopColor={isUp ? '#5BD197' : '#FD5E67'} stopOpacity="0" />
-            </linearGradient>
-          </defs>
+        {/* ── Price chart row: 240px ── */}
+        <div className="flex border-b border-[#1B1B1C]" style={{ height: VH_P }}>
+          {/* Left "Price" axis label */}
+          <div className="w-9 shrink-0 border-r border-[#1B1B1C] flex items-center justify-center">
+            <span
+              className="text-10 font-[400] leading-[12px] text-[#7A7A83]"
+              style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+            >Price</span>
+          </div>
 
-          {/* Y-axis grid lines */}
-          {[0, 0.25, 0.5, 0.75, 1].map(frac => {
-            const y = 10 + frac * (H_CHART - 20)
-            const price = domainMax - frac * (domainMax - domainMin)
-            return (
-              <g key={frac}>
-                <line x1="0" y1={y} x2={W} y2={y} stroke="#1B1B1C" strokeWidth="1" />
-                <text x="4" y={y - 3} fill="#7A7A83" fontSize="10" fontFamily="Inter">
-                  ${(price * 0.01).toFixed(4)}
-                </text>
-              </g>
-            )
-          })}
+          {/* Price SVG — flex-1 */}
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <svg
+              width="100%" height="100%"
+              viewBox={`0 0 ${VW} ${VH_P}`}
+              preserveAspectRatio="none"
+              className="block cursor-crosshair"
+              onMouseMove={handleSvgMove}
+              onMouseLeave={handleSvgLeave}
+            >
+              <defs>
+                <linearGradient id="pgGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"   stopColor="#16C284" stopOpacity="0.40" />
+                  <stop offset="100%" stopColor="#16C284" stopOpacity="0"    />
+                </linearGradient>
+              </defs>
 
-          {/* Area fill */}
-          <path d={areaPath} fill="url(#chartGrad)" />
+              {/* Horizontal grid lines */}
+              {yRows.map(({ svgY }) => (
+                <line key={svgY} x1="0" y1={svgY} x2={VW} y2={svgY} stroke="#1B1B1C" strokeWidth="1" />
+              ))}
 
-          {/* Price line */}
-          <path
-            d={linePath}
-            fill="none"
-            stroke={isUp ? '#5BD197' : '#FD5E67'}
-            strokeWidth="1.5"
-            strokeLinejoin="round"
-          />
+              {/* Vertical grid lines */}
+              {vGridIdxs.map(i => (
+                <line key={i} x1={i * xStep} y1="0" x2={i * xStep} y2={VH_P} stroke="#1B1B1C" strokeWidth="1" />
+              ))}
 
-          {/* Hover vertical line */}
-          {hoverIdx !== null && (
-            <>
-              <line
-                x1={hoverIdx * xStep}
-                y1={0}
-                x2={hoverIdx * xStep}
-                y2={H_CHART}
-                stroke="#2E2E34"
-                strokeWidth="1"
-                strokeDasharray="3 3"
-              />
-              <circle
-                cx={hoverIdx * xStep}
-                cy={yPrice(data[hoverIdx].p)}
-                r="4"
-                fill={isUp ? '#5BD197' : '#FD5E67'}
-                stroke="#0A0A0B"
-                strokeWidth="1.5"
-              />
-            </>
-          )}
+              {/* Area gradient fill */}
+              {!isEmpty && <path d={areaPath} fill="url(#pgGrad)" />}
 
-          {/* Volume bars — in bottom H_VOL px offset by H_CHART+gap */}
-          {data.map((d, i) => {
-            const barW = Math.max(1, xStep * 0.6)
-            const barH = (d.v / maxV) * (H_VOL - 4)
-            const x = i * xStep - barW / 2
-            const y = H_CHART + 20 + (H_VOL - 4) - barH
-            const isHighlight = hoverIdx === i
-            return (
-              <rect
-                key={i}
-                x={x}
-                y={y}
-                width={barW}
-                height={barH}
-                fill={d.v > maxV * 0.6 ? (isUp ? '#5BD197' : '#FD5E67') : '#252527'}
-                opacity={isHighlight ? 1 : 0.6}
-                rx="1"
-              />
-            )
-          })}
+              {/* Price line */}
+              {!isEmpty && (
+                <path
+                  d={linePath}
+                  fill="none"
+                  stroke="#16C284"
+                  strokeWidth="1.5"
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                />
+              )}
 
-          {/* X-axis time labels */}
-          {data.filter((_, i) => i % Math.ceil(data.length / 6) === 0).map((d, i, arr) => {
-            const origIdx = data.indexOf(d)
-            return (
-              <text
-                key={i}
-                x={origIdx * xStep}
-                y={H_TOTAL - 2}
-                fill="#7A7A83"
-                fontSize="10"
-                fontFamily="Inter"
-                textAnchor={origIdx === 0 ? 'start' : origIdx === data.length - 1 ? 'end' : 'middle'}
+              {/* Last price dashed horizontal line */}
+              {!isEmpty && (
+                <line
+                  x1="0" y1={lastY} x2={VW} y2={lastY}
+                  stroke="#5BD197" strokeWidth="1" strokeDasharray="4 4"
+                />
+              )}
+
+              {/* Last price dot: halo + core */}
+              {!isEmpty && (
+                <>
+                  <circle cx={lastIdx * xStep} cy={lastY} r="8" fill="#16C284" fillOpacity="0.20" />
+                  <circle cx={lastIdx * xStep} cy={lastY} r="4" fill="#16C284" />
+                </>
+              )}
+
+              {/* "Last Price $x.xxxx +x.xx%" inline label */}
+              {!isEmpty && (
+                <g transform={`translate(8, ${Math.max(18, Math.min(VH_P - 18, lastY - 10))})`}>
+                  <text fill="#7A7A83" fontSize="11" fontFamily="Inter" fontWeight="400">Last Price</text>
+                  <text x="62"  fill="#F9F9FA" fontSize="11" fontFamily="Inter" fontWeight="400">
+                    ${(lastPt.p * 0.01).toFixed(4)}
+                  </text>
+                  <text x="118" fill="#5BD197" fontSize="11" fontFamily="Inter" fontWeight="400">
+                    {pctChange >= 0 ? '+' : ''}{pctChange.toFixed(2)}%
+                  </text>
+                </g>
+              )}
+
+              {/* Hover crosshair (vertical + horizontal + dot) */}
+              {hoverX !== null && hoverYP !== null && (
+                <>
+                  <line x1={hoverX} y1="0"    x2={hoverX} y2={VH_P} stroke="#44444B" strokeWidth="1" />
+                  <line x1="0"      y1={hoverYP} x2={VW}  y2={hoverYP} stroke="#44444B" strokeWidth="1" />
+                  <circle cx={hoverX} cy={hoverYP} r="4" fill="#16C284" stroke="#0A0A0B" strokeWidth="2" />
+                </>
+              )}
+            </svg>
+          </div>
+
+          {/* Right Y-axis: 5 price labels + last-price pill + hover pill */}
+          <div
+            className="w-18 shrink-0 border-l border-[#1B1B1C] relative"
+            style={{ paddingTop: PAD, paddingBottom: PAD }}
+          >
+            <div className="h-full flex flex-col justify-between px-3">
+              {yRows.map(({ price, svgY }) => (
+                <span
+                  key={svgY}
+                  className="text-10 font-[400] leading-[12px] text-[#7A7A83] tabular-nums block text-right"
+                >
+                  {(price * 0.01).toFixed(4)}
+                </span>
+              ))}
+            </div>
+            {/* Current price pill — green, follows lastY */}
+            {!isEmpty && (
+              <div
+                className="absolute left-1.5 right-1.5 flex items-center justify-center rounded pointer-events-none"
+                style={{
+                  top: `${(lastY / VH_P) * 100}%`,
+                  transform: 'translateY(-50%)',
+                  height: 16,
+                  background: '#16C284',
+                  borderRadius: 4,
+                }}
               >
-                {d.t}
-              </text>
-            )
-          })}
-        </svg>
+                <span className="text-10 font-[400] leading-[12px] text-[#F9F9FA] tabular-nums px-1 truncate">
+                  {(lastPt.p * 0.01).toFixed(4)}
+                </span>
+              </div>
+            )}
+            {/* Hover price pill — dark, follows hoverYP */}
+            {hoverYP !== null && hoverData && (
+              <div
+                className="absolute left-1.5 right-1.5 flex items-center justify-center rounded pointer-events-none"
+                style={{
+                  top: `${(hoverYP / VH_P) * 100}%`,
+                  transform: 'translateY(-50%)',
+                  height: 16,
+                  background: '#2E2E34',
+                  borderRadius: 4,
+                }}
+              >
+                <span className="text-10 font-[400] leading-[12px] text-[#F9F9FA] tabular-nums px-1 truncate">
+                  {(hoverData.p * 0.01).toFixed(4)}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Volume chart row: 120px ── */}
+        <div className="flex" style={{ height: VH_V }}>
+          {/* Left "Volume" axis label */}
+          <div className="w-9 shrink-0 border-r border-[#1B1B1C] flex items-center justify-center">
+            <span
+              className="text-10 font-[400] leading-[12px] text-[#7A7A83]"
+              style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+            >Volume</span>
+          </div>
+
+          {/* Volume bars SVG */}
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <svg
+              width="100%" height="100%"
+              viewBox={`0 0 ${VW} ${VH_V}`}
+              preserveAspectRatio="none"
+              className="block cursor-crosshair"
+              onMouseMove={handleSvgMove}
+              onMouseLeave={handleSvgLeave}
+            >
+              {/* Volume bars */}
+              {data.map((d, i) => {
+                const barW    = Math.max(4, xStep * 0.55)
+                const barH    = Math.max(2, (d.v / maxV) * (VH_V - 20))
+                const isBarUp = i === 0 || d.p >= (data[i - 1]?.p ?? d.p)
+                return (
+                  <rect
+                    key={i}
+                    x={i * xStep - barW / 2}
+                    y={VH_V - barH}
+                    width={barW}
+                    height={barH}
+                    fill={isBarUp ? '#16C284' : '#FF3B46'}
+                    opacity={hoverIdx === i ? 1 : 0.65}
+                    rx="1"
+                  />
+                )
+              })}
+
+              {/* Hover vertical line on volume chart */}
+              {hoverX !== null && (
+                <line x1={hoverX} y1="0" x2={hoverX} y2={VH_V} stroke="#44444B" strokeWidth="1" />
+              )}
+
+              {/* Total Vol. label — top-left */}
+              {!isEmpty && (
+                <>
+                  <text x="8" y="17" fill="#7A7A83" fontSize="11" fontFamily="Inter" fontWeight="400">Total Vol.</text>
+                  <text x="66" y="17" fill="#F9F9FA" fontSize="11" fontFamily="Inter" fontWeight="400">
+                    ${(data.reduce((s, d) => s + d.v, 0) / 1000).toFixed(1)}K
+                  </text>
+                </>
+              )}
+            </svg>
+          </div>
+
+          {/* Right volume Y-axis: 2 labels */}
+          <div className="w-18 shrink-0 border-l border-[#1B1B1C] flex flex-col justify-between px-3 py-8">
+            <span className="text-10 font-[400] leading-[12px] text-[#7A7A83] tabular-nums text-right block">
+              {(maxV / 1000).toFixed(0)}K
+            </span>
+            <span className="text-10 font-[400] leading-[12px] text-[#7A7A83] tabular-nums text-right block">
+              {(maxV / 2000).toFixed(0)}K
+            </span>
+          </div>
+        </div>
+
+        {/* ── X-axis date labels: 28px ── */}
+        <div className="flex items-center border-t border-[#1B1B1C] shrink-0" style={{ height: 28 }}>
+          {/* Spacer matching left axis width */}
+          <div className="w-9 shrink-0" />
+          <div className="flex-1 flex items-center justify-between px-2">
+            {(() => {
+              const step = Math.ceil(data.length / 6)
+              const shown = data.filter((_, i) => i % step === 0 || i === data.length - 1)
+              return shown.slice(0, 7).map((d, i) => (
+                <span key={i} className="text-10 font-[400] leading-[12px] text-[#7A7A83] tabular-nums">{d.t}</span>
+              ))
+            })()}
+          </div>
+          {/* Spacer matching right axis width */}
+          <div className="w-18 shrink-0" />
+        </div>
+
+        {/* ── Hover tooltip ── */}
+        {hoverData && hoverPos && (
+          <div
+            className="absolute pointer-events-none z-20"
+            style={{ left: tooltipLeft, top: Math.max(4, hoverPos.y - 116) }}
+          >
+            <div style={{
+              width: 192,
+              background: '#252527',
+              borderRadius: 8,
+              padding: '8px 12px',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.48)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+            }}>
+              {/* Date row */}
+              <div style={{ borderBottom: '1px solid #2E2E34', paddingBottom: 8 }}>
+                <span className="text-12 font-[400] leading-[16px] text-[#7A7A83]">{hoverData.t}</span>
+              </div>
+              {/* Price row */}
+              <div className="flex items-center justify-between">
+                <span className="text-12 font-[400] leading-[16px] text-[#7A7A83]">Price:</span>
+                <span className="text-12 font-[400] leading-[16px] text-[#F9F9FA] tabular-nums">
+                  ${(hoverData.p * 0.01).toFixed(4)}
+                </span>
+              </div>
+              {/* Vol row */}
+              <div className="flex items-center justify-between">
+                <span className="text-12 font-[400] leading-[16px] text-[#7A7A83]">Vol:</span>
+                <span className="text-12 font-[400] leading-[16px] text-[#F9F9FA] tabular-nums">
+                  ${(hoverData.v / 1000).toFixed(1)}K
+                </span>
+              </div>
+            </div>
+            {/* Arrow pointing down */}
+            <div className="flex justify-center">
+              <div style={{
+                width: 16, height: 8,
+                background: '#252527',
+                clipPath: 'polygon(0 0, 100% 0, 50% 100%)',
+              }} />
+            </div>
+          </div>
+        )}
+
+        {/* ── Loading overlay (triggered on period change) ── */}
+        {isLoading && (
+          <div
+            className="absolute inset-0 flex items-center justify-center z-30"
+            style={{ background: 'rgba(10,10,11,0.90)', backdropFilter: 'blur(32px)' }}
+          >
+            <div
+              className="rounded-full animate-spin"
+              style={{
+                width: 28, height: 28,
+                border: '2.5px solid rgba(122,122,131,0.20)',
+                borderTopColor: '#F9F9FA',
+              }}
+            />
+          </div>
+        )}
+
+        {/* ── Empty state ── */}
+        {isEmpty && !isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center" style={{ opacity: 0.5 }}>
+            <div className="flex flex-col items-center gap-4">
+              <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                <rect x="8" y="18" width="48" height="30" rx="4" stroke="#7A7A83" strokeWidth="2" />
+                <path d="M16 38l10-10 8 8 10-14 8 8" stroke="#7A7A83" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="16" cy="38" r="2" fill="#7A7A83" />
+                <circle cx="26" cy="28" r="2" fill="#7A7A83" />
+                <circle cx="34" cy="36" r="2" fill="#7A7A83" />
+                <circle cx="44" cy="22" r="2" fill="#7A7A83" />
+                <circle cx="52" cy="30" r="2" fill="#7A7A83" />
+              </svg>
+              <span className="text-14 font-[400] leading-[20px] text-[#7A7A83]">No data available</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
