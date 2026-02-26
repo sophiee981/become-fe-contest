@@ -13,6 +13,7 @@ import {
 import { mockBuyOrders, mockSellOrders } from '@/mock-data/orderBook'
 import { mockMyOrders } from '@/mock-data/myOrders'
 import { RecentTradesTable } from '@/components/market/RecentTradesTable'
+import { DownFillIcon } from '@/components/ui/icons/DownFillIcon'
 
 // ─── Token image imports ───
 import tokenSkateImg  from '@/assets/images/token-skate.png'
@@ -687,9 +688,122 @@ const OrderBook: React.FC = () => {
   )
 }
 
+// ─── Filter Dropdown (same look as network filter on home page) ──────────────
+const MODAL_SHADOW = '0 4px 24px 0 rgba(0,0,0,0.48)'
+
+type FilterOption = { id: string; label: string }
+
+interface FilterDropdownProps {
+  options: FilterOption[]
+  value: string
+  onChange: (v: string) => void
+  title?: string
+}
+
+const FilterDropdown: React.FC<FilterDropdownProps> = ({ options, value, onChange, title }) => {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const activeOption = options.find(o => o.id === value) ?? options[0]
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className={clsx(
+          'flex items-center gap-1.5 h-9 pl-4 pr-2 rounded-lg border transition-colors duration-150 text-14 font-[500] text-[#f9f9fa] whitespace-nowrap',
+          open
+            ? 'border-[#3a3a3f] bg-[#1b1b1c]'
+            : 'border-[#252527] bg-transparent hover:border-[#3a3a3f] hover:bg-[#1b1b1c]',
+        )}
+      >
+        {activeOption.label}
+        <span className="w-5 h-5 flex items-center justify-center p-0.5 shrink-0">
+          <DownFillIcon
+            size={16}
+            className={clsx('text-[#7a7a83] transition-transform duration-150', open && 'rotate-180')}
+          />
+        </span>
+      </button>
+
+      {open && (
+        <div
+          className="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[160px] bg-[#1b1b1c] rounded-[10px] overflow-hidden"
+          style={{ boxShadow: MODAL_SHADOW }}
+        >
+          <div className="p-2 flex flex-col gap-1">
+            {title && (
+              <div className="px-2 py-1">
+                <span className="text-12 font-[500] leading-[16px] text-[#7a7a83]">{title}</span>
+              </div>
+            )}
+            <div className="flex flex-col gap-1">
+              {options.map(opt => {
+                const isActive = value === opt.id
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => { onChange(opt.id); setOpen(false) }}
+                    className={clsx(
+                      'w-full flex items-center gap-2 px-2 py-1.5 rounded-lg',
+                      'text-14 font-[500] leading-5 transition-colors duration-150',
+                      isActive ? 'bg-[#252527] text-[#f9f9fa]' : 'text-[#f9f9fa] hover:bg-[#252527]',
+                    )}
+                  >
+                    <span className="flex-1 text-left">{opt.label}</span>
+                    <span className="w-5 h-5 shrink-0 flex items-center justify-center p-0.5">
+                      {isActive && (
+                        <svg width="16" height="16" viewBox="0 0 20 15" fill="#5BD197" aria-hidden="true">
+                          <path d="M19.5499 0.43968C19.8311 0.720971 19.9891 1.10243 19.9891 1.50018C19.9891 1.89793 19.8311 2.27939 19.5499 2.56068L8.30693 13.8037C8.15835 13.9523 7.98196 14.0702 7.78781 14.1506C7.59367 14.231 7.38558 14.2724 7.17543 14.2724C6.96529 14.2724 6.7572 14.231 6.56305 14.1506C6.36891 14.0702 6.19251 13.9523 6.04393 13.8037L0.457932 8.21868C0.314667 8.08031 0.200394 7.91479 0.12178 7.73179C0.0431668 7.54878 0.00178736 7.35195 5.66349e-05 7.15278C-0.00167409 6.95361 0.0362786 6.75609 0.1117 6.57175C0.187121 6.3874 0.298501 6.21993 0.43934 6.07909C0.580179 5.93825 0.747657 5.82687 0.932001 5.75145C1.11635 5.67603 1.31387 5.63807 1.51303 5.6398C1.7122 5.64153 1.90903 5.68291 2.09204 5.76153C2.27505 5.84014 2.44056 5.95441 2.57893 6.09768L7.17493 10.6937L17.4279 0.43968C17.5672 0.30029 17.7326 0.189715 17.9147 0.114273C18.0967 0.0388304 18.2919 0 18.4889 0C18.686 0 18.8811 0.0388304 19.0632 0.114273C19.2452 0.189715 19.4106 0.30029 19.5499 0.43968Z" />
+                        </svg>
+                      )}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+const COLLATERAL_OPTIONS: FilterOption[] = [
+  { id: 'usdc',  label: 'USDC'  },
+  { id: 'usdt',  label: 'USDT'  },
+  { id: 'sol',   label: 'SOL'   },
+  { id: 'eth',   label: 'ETH'   },
+]
+
+const FILL_TYPE_OPTIONS: FilterOption[] = [
+  { id: 'all',     label: 'All'          },
+  { id: 'full',    label: 'Full Fill'    },
+  { id: 'partial', label: 'Partial Fill' },
+]
+
+const ORDER_TYPE_OPTIONS: FilterOption[] = [
+  { id: 'all',    label: 'All'    },
+  { id: 'limit',  label: 'Limit'  },
+  { id: 'market', label: 'Market' },
+]
+
 // ─── Left Column ─────────────────────────────────────────────────────────────
 const LeftColumn: React.FC<{ market: HomeMarket }> = ({ market }) => {
-  const [activeTab, setActiveTab] = useState<'collateral' | 'fill' | 'order'>('collateral')
+  const defaultCollateral = COLLATERAL_OPTIONS.find(
+    o => o.id === market.collateral.toLowerCase(),
+  )?.id ?? 'usdc'
+  const [collateral, setCollateral] = useState(defaultCollateral)
+  const [fillType,   setFillType  ] = useState('all')
+  const [orderType,  setOrderType ] = useState('all')
 
   // Live trade simulation
   const [liveTradesRaw, setLiveTradesRaw] = useState<HomeRecentTrade[]>(
@@ -730,26 +844,24 @@ const LeftColumn: React.FC<{ market: HomeMarket }> = ({ market }) => {
 
         {/* Right: Collateral / Fill Type / Order Type dropdowns + chart icon */}
         <div className="flex items-center gap-2">
-          {(['Collateral', 'Fill Type', 'Order Type'] as const).map((tab) => {
-            const tabKey: typeof activeTab = tab === 'Fill Type' ? 'fill' : tab === 'Order Type' ? 'order' : 'collateral'
-            return (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tabKey)}
-                className={clsx(
-                  'flex items-center gap-1.5 h-9 pl-4 pr-2 rounded-lg bg-bg-surface text-14 font-medium text-text-primary transition-colors hover:bg-bg-elevated',
-                  activeTab === tabKey && 'ring-1 ring-border-active',
-                )}
-              >
-                {tab === 'Collateral' ? market.collateral : tab}
-                <span className="w-4 h-4 flex items-center justify-center">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M4 6L8 10L12 6" stroke="#7A7A83" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </span>
-              </button>
-            )
-          })}
+          <FilterDropdown
+            options={COLLATERAL_OPTIONS}
+            value={collateral}
+            onChange={setCollateral}
+            title="Collateral"
+          />
+          <FilterDropdown
+            options={FILL_TYPE_OPTIONS}
+            value={fillType}
+            onChange={setFillType}
+            title="Fill Type"
+          />
+          <FilterDropdown
+            options={ORDER_TYPE_OPTIONS}
+            value={orderType}
+            onChange={setOrderType}
+            title="Order Type"
+          />
 
           {/* Chart icon button — chart_line_fill, #5BD197 */}
           <button className="flex items-center justify-center w-9 h-9 rounded-lg bg-bg-surface hover:bg-bg-elevated transition-colors">
